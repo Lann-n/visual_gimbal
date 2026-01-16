@@ -1,0 +1,3 @@
+[submodule "ACE_ECF_26"]
+	path = ACE_ECF_26
+	url = https://github.com/DGUT-ACE-EMBEDDED/ACE_ECF_26.git
