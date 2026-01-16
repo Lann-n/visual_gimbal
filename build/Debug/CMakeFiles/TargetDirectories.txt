@@ -1,0 +1,8 @@
+D:/Documents/RoboMaster2026/project/visual_gimbal/build/Debug/CMakeFiles/visual_gimbal.dir
+D:/Documents/RoboMaster2026/project/visual_gimbal/build/Debug/CMakeFiles/edit_cache.dir
+D:/Documents/RoboMaster2026/project/visual_gimbal/build/Debug/CMakeFiles/rebuild_cache.dir
+D:/Documents/RoboMaster2026/project/visual_gimbal/build/Debug/cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir
+D:/Documents/RoboMaster2026/project/visual_gimbal/build/Debug/cmake/stm32cubemx/CMakeFiles/USB_Device_Library.dir
+D:/Documents/RoboMaster2026/project/visual_gimbal/build/Debug/cmake/stm32cubemx/CMakeFiles/FreeRTOS.dir
+D:/Documents/RoboMaster2026/project/visual_gimbal/build/Debug/cmake/stm32cubemx/CMakeFiles/edit_cache.dir
+D:/Documents/RoboMaster2026/project/visual_gimbal/build/Debug/cmake/stm32cubemx/CMakeFiles/rebuild_cache.dir
