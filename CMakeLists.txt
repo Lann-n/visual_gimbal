@@ -229,6 +229,7 @@ USER_ADD_DIR(${CMAKE_SOURCE_DIR}/ACE_ECF_26/Algorithm/structure)
 # 自己的文件加这里（TASK)
 # ==============================
 USER_ADD_DIR(${CMAKE_SOURCE_DIR}/Task)
+USER_ADD_DIR(${CMAKE_SOURCE_DIR}/Task/app)
 
 # 判断芯片型号目录是否存在
 if(EXISTS "${CMAKE_SOURCE_DIR}/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal.c")
@@ -236,6 +237,9 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal.c"
 else()
     set(DSP_LIB_PATH "${CMAKE_SOURCE_DIR}/Middlewares/ST/ARM/DSP/Lib/libarm_cortexM4lf_math.a")
 endif()
+
+# Remove wrong libob.a library dependency when using cpp files
+list(REMOVE_ITEM CMAKE_C_IMPLICIT_LINK_LIBRARIES ob)
 
 # Add linked libraries
 target_link_libraries(${CMAKE_PROJECT_NAME}

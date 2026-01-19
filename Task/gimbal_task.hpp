@@ -1,8 +1,11 @@
 #pragma once
 
-extern "C" {
-    #include "FreeRTOS.h"
-    #include "task.h"
+#include "gimbal.hpp"
 
-    void Gimbal_Task(void const * argument);
+extern "C" {
+#include "FreeRTOS.h"
+#include "task.h"
+#include "cmsis_os.h"
+
+void Gimbal_Task(void const* argument);
 }
