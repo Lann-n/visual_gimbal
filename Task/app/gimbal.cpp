@@ -1,4 +1,6 @@
 #include "gimbal.hpp"
+namespace MM = Motor_n::MotorBaseDef_n;
+//创建单例
 
 bool Gimbal::Init()
 {
@@ -8,20 +10,20 @@ bool Gimbal::Init()
     robo_cmd->RoboCmdInit();
     imu = getImuPtr();
 
-    pitch->Init();
-    yaw->Init();
+    pitch.Init();
+    yaw.Init();
+    return 0;
 }
 
-void Gimbal::pitch_c::Init()
+void pitch_c::Init()
 {
     MM::Motor_Base_Config_t pitchMotorConfig =
-        MM::Motor_Base_Config_t("pitch", MM::Motor_Type_euc::DM4310)
+        MM::Motor_Base_Config_t("Pitch", MM::Motor_Type_euc::DM4310)
             .SetControlSetting(
                 MM::Motor_Control_Setting_t{MM::Closeloop_Type_euc::ANGLE_AND_SPEED_LOOP})
             .SetPIDConfig(
                 alg_n::PidInitConfig_t // Angle PID
                 {
-
                     .Kp = 0.6f,
                     .Ki = 0.0097f,
                     .Kd = 0.3f,
@@ -35,7 +37,6 @@ void Gimbal::pitch_c::Init()
                     .errorabsmax = 1.2f,
                     .errorabsmin = 0.3f,
                     .d_filter_num = 0.2f,
-
                 },
                 alg_n::PidInitConfig_t // Speed PID
                 {
@@ -45,12 +46,20 @@ void Gimbal::pitch_c::Init()
                     .ActualValueSource = nullptr,
                     .mode = Output_Limit | DerivativeFilter,
                     .max_out = 7.0f, // 7nm
+                },
+                alg_n::PidInitConfig_t // current PID
+                {
+                    .Kp = 0.0f,
+                    .Ki = 0.0f,
+                    .Kd = 0.0f,
+                    .ActualValueSource = nullptr,
+                    .mode = Output_Limit,
+                    .max_out = 7.0f, // 7nm
                 })
 
             .SetCANConfig(BSP_n::CanInitConfig_s{.can_handle = &hcan1,
                                                  .tx_id = 0xE1, // Slave ID
                                                  .rx_id = 0xE2, // Master ID
-                                                 .can_module_callback = nullptr,
                                                  .SAND_IDE = CAN_ID_STD})
 
             .SetMechanicalParams(MM::Motor_Data_t::Motor_Fixed_Param_t{.zero_offset = 0.0f,
@@ -71,13 +80,13 @@ void Gimbal::pitch_c::Init()
         .t_min = -10,
         .t_max = 10, // 这三项必须与上位机软件参数一致
     };
-    motor_ptr = new Motor_n::DmMotor_n::DmDriver_c(pitchMotorConfig, pitchMotorDMConfig);
+    this->motor_ptr = new Motor_n::DmMotor_n::DmDriver_c(pitchMotorConfig, pitchMotorDMConfig);
 }
 
-void Gimbal::yaw_c::Init()
+void yaw_c::Init()
 {
     MM::Motor_Base_Config_t yawMotorConfig =
-        MM::Motor_Base_Config_t("yaw", MM::Motor_Type_euc::DM4310)
+        MM::Motor_Base_Config_t("Yaw", MM::Motor_Type_euc::DM4310)
             .SetControlSetting(
                 MM::Motor_Control_Setting_t{MM::Closeloop_Type_euc::ANGLE_AND_SPEED_LOOP})
             .SetPIDConfig(
@@ -97,7 +106,6 @@ void Gimbal::yaw_c::Init()
                     .max_Ierror = 100.0f,
                     .errorabsmax = 1.8f,
                     .errorabsmin = 0.5f
-
                 },
                 alg_n::PidInitConfig_t // Speed PID
                 {
@@ -114,12 +122,20 @@ void Gimbal::yaw_c::Init()
                     .errorabsmin = 0.0f,
                     .d_filter_num = 1,
                     .out_filter_num = 1.0f,
+                },
+                alg_n::PidInitConfig_t // current PID
+                {
+                    .Kp = 0.0f,
+                    .Ki = 0.0f,
+                    .Kd = 0.0f,
+                    .ActualValueSource = nullptr,
+                    .mode = Output_Limit,
+                    .max_out = 7.0f, // 7nm
                 })
 
             .SetCANConfig(BSP_n::CanInitConfig_s{.can_handle = &hcan2,
                                                  .tx_id = 0xF1, // Slave ID
                                                  .rx_id = 0xF2, // Master ID
-                                                 .can_module_callback = nullptr,
                                                  .SAND_IDE = CAN_ID_STD})
 
             .SetMechanicalParams(MM::Motor_Data_t::Motor_Fixed_Param_t{.zero_offset = 0.0f,
@@ -140,4 +156,11 @@ void Gimbal::yaw_c::Init()
         .t_min = -10,
         .t_max = 10, // 这三项必须与上位机软件参数一致
     };
+    this->motor_ptr = new Motor_n::DmMotor_n::DmDriver_c(yawMotorConfig, yawMotorDMConfig);
 }
+
+/**
+ * @brief 云台模式选择
+ *
+ */
+void Gimbal::mode_set() {}
