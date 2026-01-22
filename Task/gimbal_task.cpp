@@ -1,3 +1,13 @@
+/**
+ * @file gimbal_task.cpp
+ * @author Lann
+ * @brief 云台任务
+ * @version 0.1
+ * @date 2026-01-20
+ * 
+ * @copyright Copyright (c) 2026
+ * 
+ */
 #include "gimbal_task.hpp"
 
 void Gimbal_Task(void const* argument)
@@ -6,11 +16,9 @@ void Gimbal_Task(void const* argument)
     while (Gimbal::GetInstance()->Init()) {
         osDelay(10);
     }
-    // while (getImuPtr() == nullptr || getImuPtr()->init_flag == 0) {
-    //     osDelay(10);
-    // }
-    // Gimbal::GetInstance()->Init();
+
     for (;;) {
-        osDelay(10);
+        Gimbal::GetInstance()->Loop();
+        osDelay(1);
     }
 }
