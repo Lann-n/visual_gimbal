@@ -96,6 +96,7 @@ void fire_c::Init()
         .ActualValueSource = nullptr,
         .mode = Output_Limit,
         .max_out = PLUCK_MAX,
+        .deadband = 500.0f// sb拨盘零速控不住的一直晃沃日尼玛
     };
     semi_pos_pid.Init(pid_pluck_p_cof);
     semi_spd_pid.Init(pid_pluck_s_cof);
@@ -195,7 +196,7 @@ void fire_c::mode_set()
                                   AN_BULLET * SEMI_NUM + dead_erro;
                           }
                       },
-                      80, 550);
+                      80, 350);//单发阈值与连发阈值
     /*连发释放*/
     if ((fire_mode == AUTO) &&
         (robo_cmd->dt7_data_->ch[4] > -10 && robo_cmd->dt7_data_->ch[4] < 100)) {
@@ -213,6 +214,7 @@ void fire_c::mode_set()
     if (fire_mode == READY) {
         motor_set_value.pluck_motor_semi_set = 0.0f;
         motor_set_value.pluck_motor_auto_set = 0.0f;
+        pluck_motor->motor_data_.motor_processed_data.clear();
         // pluck_motor->motor_data_.clear();
         // final_out = auto_pid.Calc(motor_set_value.pluck_motor_auto_set,
         //                           pluck_motor->motor_data_.motor_raw_data.feedback_speed);
@@ -288,12 +290,12 @@ void fire_c::pluck_ctrl()
                                   pluck_motor->motor_data_.motor_raw_data.feedback_speed);
         pluck_motor->SetMotorOutputFix(-final_out);
         // sb拨盘零速控不住的一直晃沃日尼玛
-        if ((fire_mode == NO_FIRE || fire_mode == READY) &&
-            (abs(pluck_motor->motor_data_.motor_raw_data.feedback_speed - 0) < 2000)) {
-            auto_pid.Clear();
-            final_out = 0;
-            pluck_motor->SetMotorOutputFix(0);
-        }
+        // if ((fire_mode == NO_FIRE || fire_mode == READY) &&
+        //     (abs(pluck_motor->motor_data_.motor_raw_data.feedback_speed - 0) < 500)) {
+        //     // auto_pid.Clear();
+        //     // final_out = 0;
+        //     pluck_motor->SetMotorOutputFix(0);
+        // }
     }
 }
 
