@@ -85,7 +85,6 @@ public:
     alg_n::PID_c semi_pos_pid;
     alg_n::PID_c semi_spd_pid;
     alg_n::PID_c auto_pid;
-    alg_n::FirstOrderFilter_c *speed_filter;
     
     float pos_out;   // 单发位置环输出
     float final_out; // 单发连发输出
