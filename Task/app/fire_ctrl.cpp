@@ -268,6 +268,7 @@ void fire_c::ctrl_fire_motor()
 
 void fire_c::pluck_ctrl()
 {
+    //其实这个地方好像没什么用，后面那个解决了
     static mode last_mode = NO_FIRE;
     if (last_mode != fire_mode) {
         semi_pos_pid.Clear();
