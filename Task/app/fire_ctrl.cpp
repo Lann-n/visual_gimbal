@@ -112,7 +112,7 @@ void fire_c::Init()
 
 void fire_c::Loop()
 {
-    
+
     mode_set();
     ctrl_fire_motor();
 }
@@ -269,8 +269,7 @@ void fire_c::ctrl_fire_motor()
 void fire_c::pluck_ctrl()
 {
     static mode last_mode = NO_FIRE;
-    if(last_mode != fire_mode)
-    {
+    if (last_mode != fire_mode) {
         semi_pos_pid.Clear();
         semi_spd_pid.Clear();
         auto_pid.Clear();
@@ -287,6 +286,13 @@ void fire_c::pluck_ctrl()
         final_out = auto_pid.Calc(motor_set_value.pluck_motor_auto_set,
                                   pluck_motor->motor_data_.motor_raw_data.feedback_speed);
         pluck_motor->SetMotorOutputFix(-final_out);
+        // sb拨盘零速控不住的一直晃沃日尼玛
+        if ((fire_mode == NO_FIRE || fire_mode == READY) &&
+            (abs(pluck_motor->motor_data_.motor_raw_data.feedback_speed - 0) < 2000)) {
+            auto_pid.Clear();
+            final_out = 0;
+            pluck_motor->SetMotorOutputFix(0);
+        }
     }
 }
 
