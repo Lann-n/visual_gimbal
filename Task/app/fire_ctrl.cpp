@@ -104,7 +104,6 @@ void fire_c::Init()
     semi_pos_pid.ChangeActValSource(&pluck_motor->motor_data_.motor_processed_data.total_ecd);
     semi_spd_pid.ChangeActValSource(&pluck_motor->motor_data_.motor_raw_data.feedback_speed);
     auto_pid.ChangeActValSource(&pluck_motor->motor_data_.motor_raw_data.feedback_speed);
-    speed_filter = new alg_n::FirstOrderFilter_c(1.0f);
 
     enable_motor();
     robo_cmd = RoboCmd_c::GetInstance();
@@ -278,7 +277,7 @@ void fire_c::pluck_ctrl()
         auto_pid.Clear();
         last_mode = fire_mode;
     }
-    speed_filter->Calc(pluck_motor->motor_data_.motor_raw_data.feedback_speed);
+    // 单发与其他模式下的速度控制
     if (fire_mode == SEMI) {
         pos_out = semi_pos_pid.Calc(motor_set_value.pluck_motor_semi_set,
                                     pluck_motor->motor_data_.motor_processed_data.total_ecd);
