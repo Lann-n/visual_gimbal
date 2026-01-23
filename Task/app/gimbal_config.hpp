@@ -184,6 +184,63 @@ inline Motor_n::DmMotor_n::DmDriver_c::DM_ModePrame_s yawMotorDMConfig = {
     .t_max = 10, // 这三项必须与上位机软件参数一致
 };
 
+inline alg_n::PidInitConfig_t pitch_visual_angle_config // Angle PID
+    {
+        .Kp = 0.6f,
+        .Ki = 0.0097f,
+        .Kd = 0.3f,
+        .Kfa = 0.0f,
+        .Kfb = 0.0f,
+        .ActualValueSource = nullptr,
+        .mode = Output_Limit | Integral_Limit | Feedforward | DerivativeFilter |
+                ChangingIntegrationRate,
+        .max_out = 30.0f,
+        .max_Ierror = 100.0f,
+        .errorabsmax = 1.2f,
+        .errorabsmin = 0.3f,
+        .d_filter_num = 0.2f,
+    };
+inline alg_n::PidInitConfig_t pitch_visual_speed_config // Speed PID
+    {
+        .Kp = 0.5f,
+        .Ki = 0.0f,
+        .Kd = 0.2f,
+        .ActualValueSource = nullptr,
+        .mode = Output_Limit | DerivativeFilter,
+        .max_out = 7.0f, // 7nm
+    };
+
+inline alg_n::PidInitConfig_t yaw_visual_angle_config // Angle PID
+    {
+
+        .Kp = 0.5f,
+        .Ki = 0.015f,
+        .Kd = 1.0f,
+        .Kfa = 1.2f,
+        .Kfb = 0.0f,
+        .ActualValueSource = nullptr,
+        .mode = Output_Limit | Integral_Limit | Feedforward | ChangingIntegrationRate,
+        .max_out = 30.0f,
+        .max_Ierror = 30.0f,
+        .errorabsmax = 1.15f,
+        .errorabsmin = 0.85f};
+inline alg_n::PidInitConfig_t yaw_visual_speed_config // Speed PID
+    {
+        .Kp = 0.72f,
+        .Ki = 0.0f,
+        .Kd = 0.08f,
+        .Kfa = 1.0f,
+        .ActualValueSource = nullptr,
+        .mode = Output_Limit | DerivativeFilter | Integral_Limit | Feedforward |
+                ChangingIntegrationRate,
+        .max_out = 7.0f, // 7nm
+        .max_Ierror = 100.0f,
+        .errorabsmax = 0.0f,
+        .errorabsmin = 0.0f,
+        .d_filter_num = 1,
+        .out_filter_num = 1.0f,
+    };
+
 typedef enum {
     GIMBAL_MANUAL,     // 手动状态
     GIMBAL_AUTOATTACK, // 自瞄状态

@@ -180,7 +180,7 @@ void Gimbal::target_set()
  */
 void Gimbal::mode_set()
 {
-    Behaviour_e last_behav;
+    static Behaviour_e last_behav;
     static Behaviour_e rc_behav = gimbal_mode;
     static Behaviour_e kb_behav = gimbal_mode;
     static Behaviour_e vtm_behav = gimbal_mode;
@@ -212,6 +212,19 @@ void Gimbal::mode_set()
     if (last_behav != rc_behav) // 模式切换
     {
         gimbal_mode = rc_behav;
+        if(gimbal_mode == GIMBAL_AUTOATTACK)
+        {
+            pitch.Position_pid.UpdateParam(pitch_visual_angle_config);
+            pitch.Speed_pid.UpdateParam(pitch_visual_speed_config);
+            yaw.Position_pid.UpdateParam(yaw_visual_angle_config);
+            yaw.Speed_pid.UpdateParam(yaw_visual_speed_config);
+        }
+        else {
+            pitch.Position_pid.UpdateParam(pitchMotorConfig.angle_PID);
+            pitch.Speed_pid.UpdateParam(pitchMotorConfig.speed_PID);
+            yaw.Position_pid.UpdateParam(yawMotorConfig.angle_PID);
+            yaw.Speed_pid.UpdateParam(yawMotorConfig.speed_PID);
+        }
         if (last_behav == GIMBAL_MANUAL && rc_behav == GIMBAL_FIRE_TEST) // 手瞄切部署，锁编码器
         {
             // pitch_motor->motor_controller_.SetAngleFeedbackPtr(&pitch_motor->motor_data_.motor_processed_data.absolute_angle);
