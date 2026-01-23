@@ -1,9 +1,14 @@
 #pragma once
 
+#include "Algorithm/filter_alg/filter.hpp"
 #include "KeyboardUtil.hpp"
 #include "Module/motor/DJI/dji_driver.hpp"
+#include "gimbal_config.hpp"
 #include "robo_cmd.hpp"
-#include "Algorithm/filter_alg/filter.hpp"
+
+extern "C" {
+#include "Vision.h"
+}
 
 // m/s->rpm
 #define FIRESPEED_TO_MOTORRPM 264
@@ -74,6 +79,14 @@ public:
         AUTO,    // 连发
     } mode;
 
+    struct {
+        uint16_t shoot_barrel_heat_limit;   // 当前热量限制
+        uint16_t shoot_barrel_heat_current; // 当前热量
+        float shoot_bullet_speed;           // 当前射击初速度
+        uint8_t robot_level;                // 机器人等级
+        uint8_t aim_color;
+    } shoot_msg;
+
     Motor_n::DjiMotor_n::DjiDriver_c* left_motor;
     Motor_n::DjiMotor_n::DjiDriver_c* right_motor;
     Motor_n::DjiMotor_n::DjiDriver_c* pluck_motor;
@@ -85,13 +98,14 @@ public:
     alg_n::PID_c semi_pos_pid;
     alg_n::PID_c semi_spd_pid;
     alg_n::PID_c auto_pid;
-    
+
     float pos_out;   // 单发位置环输出
     float final_out; // 单发连发输出
 
     /*发射机构相关状态位数据等*/
     mode fire_mode = NO_FIRE;
     RoboCmd_c* robo_cmd; // 用于获取控制指令等
+    Visual_Rx_t* visual_data;
 
     BSP_n::DWT_c* dwt;
     float fire_speed = 23.0f;
@@ -106,7 +120,7 @@ public:
 
 public:
     void Init();
-    void Loop();
+    void Loop(Behaviour_e gimbal_mode, bool gimbal_closed);
     inline void Ctrl()
     {
         Motor_n::DjiMotor_n::DjiMotorControl(); // 逐个算 PID
@@ -135,7 +149,7 @@ public:
     void fire_zero_force();
     void pluck_zero_force();
 
-    void mode_set();
+    void mode_set(Behaviour_e gimbal_mode, bool gimbal_closed);
     bool check_allow_fire();
     void ctrl_fire_motor();
     void all_fire_ctrl();

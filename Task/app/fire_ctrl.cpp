@@ -96,7 +96,7 @@ void fire_c::Init()
         .ActualValueSource = nullptr,
         .mode = Output_Limit,
         .max_out = PLUCK_MAX,
-        .deadband = 500.0f// sb拨盘零速控不住的一直晃沃日尼玛
+        .deadband = 500.0f // sb拨盘零速控不住的一直晃沃日尼玛
     };
     semi_pos_pid.Init(pid_pluck_p_cof);
     semi_spd_pid.Init(pid_pluck_s_cof);
@@ -107,16 +107,24 @@ void fire_c::Init()
 
     enable_motor();
     robo_cmd = RoboCmd_c::GetInstance();
+    visual_data = Get_virtual_recive_ptr();
     dwt = BSP_n::DWT_c::Get_DwtInstance();
 }
 
-void fire_c::Loop()
+void fire_c::Loop(Behaviour_e gimbal_mode, bool gimbal_closed)
 {
-
-    mode_set();
-    ctrl_fire_motor();
+    if (gimbal_mode == GIMBAL_ZERO_FORCE) {
+        fire_zero_force();
+        pluck_zero_force();
+    } else {
+        mode_set(gimbal_mode, gimbal_closed);
+        ctrl_fire_motor();
+    }
+    pluck_ctrl();
+    Motor_n::DjiMotor_n::DjiMotorControl(); // 逐个算 PID
+    Motor_n::DjiMotor_n::set_GiveCurrent(); // 把 PID 输出写进分组缓冲
+    Motor_n::DjiMotor_n::MotorTransmit();   // 统一发送
 }
-
 /**
  * @brief 摩擦轮无力
  * @enter 状态位为NO_FIRE，或者主动调用顺带切换为NO_FIRE
@@ -162,7 +170,7 @@ void fire_c::reset_pluck()
  * @brief 状态机更新
  *
  */
-void fire_c::mode_set()
+void fire_c::mode_set(Behaviour_e gimbal_mode, bool gimbal_closed)
 {
     static keyboard_util::KeyCode rc_fire_mode;
     rc_fire_mode.update(
@@ -178,24 +186,28 @@ void fire_c::mode_set()
         nullptr);
     static keyboard_util::KeyCode pluck_ctrl; // 短按单发，长按全自动
     pluck_ctrl.update((robo_cmd->dt7_data_->ch[4] > 500), nullptr, nullptr,
-                      [this] {
+                      [this, gimbal_mode, gimbal_closed] {
                           if (fire_mode == STUCK || fire_mode == NO_FIRE)
                               return;
                           else {
+                              if (gimbal_mode == GIMBAL_AUTOATTACK && (visual_data->fire_flag == 0 || gimbal_closed == false))
+                                  return;
                               fire_mode = AUTO;
                               motor_set_value.pluck_motor_auto_set = fire_rate(25);
                           }
                       },
-                      [this] {
+                      [this, gimbal_mode, gimbal_closed] {
                           if (fire_mode == STUCK || fire_mode == NO_FIRE)
                               return;
                           else {
+                              if (gimbal_mode == GIMBAL_AUTOATTACK && (visual_data->fire_flag == 0 || gimbal_closed == false))
+                                  return;
                               fire_mode = SEMI;
                               motor_set_value.pluck_motor_semi_set =
                                   AN_BULLET * SEMI_NUM + dead_erro;
                           }
                       },
-                      80, 350);//单发阈值与连发阈值
+                      80, 350); // 单发阈值与连发阈值
     /*连发释放*/
     if ((fire_mode == AUTO) &&
         (robo_cmd->dt7_data_->ch[4] > -10 && robo_cmd->dt7_data_->ch[4] < 100)) {
@@ -269,7 +281,7 @@ void fire_c::ctrl_fire_motor()
 
 void fire_c::pluck_ctrl()
 {
-    //其实这个地方好像没什么用，后面那个解决了
+    // 其实这个地方好像没什么用，后面那个解决了
     static mode last_mode = NO_FIRE;
     if (last_mode != fire_mode) {
         semi_pos_pid.Clear();

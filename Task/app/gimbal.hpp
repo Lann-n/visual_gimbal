@@ -2,15 +2,14 @@
 
 #include "Bsp/DWT/bsp_dwt.hpp"
 #include "fire_ctrl.hpp"
+#include "gimbal_config.hpp"
 #include "imu_task.h"
-#include "motor_config.hpp"
 #include "robo_cmd.hpp"
 #include <cstring>
 #include <stdlib.h>
 
-extern "C"
-{
-    #include "Vision.h"
+extern "C" {
+#include "Vision.h"
 }
 
 // 运行几次发送一次
@@ -25,20 +24,49 @@ class fire_c;
 /*云台类*/
 class Gimbal
 {
-    typedef enum {
-        GIMBAL_MANUAL,     // 手动状态
-        GIMBAL_AUTOATTACK, // 自瞄状态
-        GIMBAL_ZERO_FORCE, // 无力状态
-        GIMBAL_FIRE_TEST   // 部署模式，底盘无力，锁编码器
-    } Behaviour_e;
+    typedef union {
+        struct {
+            uint16_t shooter_heat;
+            uint16_t heat_limit;
+            int16_t bullet_speed;
+            uint8_t robot_level : 4;
+            uint8_t aim_color : 1;
+            uint16_t yaw_dot : 11;
+        } com_packet_data;
+        uint8_t rx_data[8];
+    } cancom_rx_packet;
+    typedef union {
+        struct {
+            int16_t rc_channel2 : 11;
+            int16_t rc_channel3 : 11;
+            int16_t rc_dial : 11;
+            uint8_t rc_s1 : 2;
+            uint8_t rc_s2 : 2;
+            uint8_t gimbal_pitch : 8;
+            uint8_t id : 1;
+            uint8_t fric_onoff : 1;
+            uint8_t gimbal_mode : 3;
+            uint8_t fire_mode : 1;
+            uint8_t aim_mode : 2;
+            uint8_t fire_speed : 4;
+            uint8_t reverse : 7;
+        } com_packet_data;
+        uint8_t tx_data[8];
+    } cancom_tx_packet;
 
 public:
     RoboCmd_c* robo_cmd;
     BMI088Heat_c* imu;
     INS_t* ins;
     Behaviour_e gimbal_mode;
+    BSP_n::Can_c* broad_com;
+    cancom_rx_packet chassis_data;
+    cancom_tx_packet gimbal_data;
+    /*视觉相关数据*/
     Visual_Tx_t visual_tx_data;
-    Visual_Rx_t *visual_data;
+    Visual_Rx_t* visual_data;
+    float pitch_dif_target = 0.5f;
+    float yaw_dif_target = 0.5f;
     /*云台电机相关类*/
     pitch_c pitch;
     yaw_c yaw;
@@ -76,7 +104,8 @@ private:
     void pid_init();
     void crtl_calc();
     void fire_ctrl();
-
+    void Decode_Chassis_Data(BSP_n::Can_c* instance);
+    void Gimbal2Chassis();
     inline void enable_motor()
     {
         CONTROL_SEND_HZ(100);

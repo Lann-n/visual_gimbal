@@ -2,6 +2,44 @@
 
 namespace MM = Motor_n::MotorBaseDef_n;
 
+void Gimbal::Decode_Chassis_Data(BSP_n::Can_c* instance)
+{
+    if (instance->GetRxId() != CHASSIS_ID) return;
+    memcpy(&chassis_data, instance->rx_buff_, 8);
+    fire.shoot_msg.shoot_barrel_heat_current = chassis_data.com_packet_data.shooter_heat;
+    fire.shoot_msg.shoot_barrel_heat_limit = chassis_data.com_packet_data.heat_limit;
+    fire.shoot_msg.shoot_bullet_speed = chassis_data.com_packet_data.bullet_speed / 100.0f;
+    fire.shoot_msg.aim_color = chassis_data.com_packet_data.aim_color;
+    fire.shoot_msg.robot_level = chassis_data.com_packet_data.robot_level;
+}
+
+void Gimbal::Gimbal2Chassis()
+{
+    CONTROL_SEND_HZ(5);//200Hz
+
+    static uint8_t gimbal_status = 2;
+    if (gimbal_mode == GIMBAL_MANUAL)
+        gimbal_status = 3;
+    else if (gimbal_mode == GIMBAL_AUTOATTACK)
+        gimbal_status = 1;
+    else
+        gimbal_status = 2;
+    gimbal_data.com_packet_data.rc_channel2 = robo_cmd->dt7_data_->ch[2];
+    gimbal_data.com_packet_data.rc_channel3 = robo_cmd->dt7_data_->ch[3];
+    gimbal_data.com_packet_data.rc_dial = robo_cmd->dt7_data_->ch[4];
+    gimbal_data.com_packet_data.rc_s1 = robo_cmd->dt7_data_->s1;//后续要做跟vt13的处理
+    gimbal_data.com_packet_data.rc_s2 = gimbal_status;
+    gimbal_data.com_packet_data.id = (visual_data->distance <= 0 ? 0 : 1);
+    gimbal_data.com_packet_data.fric_onoff = (fire.fire_mode != fire_c::NO_FIRE ? 1 : 0);
+    gimbal_data.com_packet_data.gimbal_mode = gimbal_mode;
+    gimbal_data.com_packet_data.fire_mode = (fire.fire_mode == fire_c::SEMI ? 1 : 0);
+    gimbal_data.com_packet_data.aim_mode = visual_tx_data.now_mode;
+    gimbal_data.com_packet_data.fire_speed = (uint8_t)((fire_speed(25) - 20.0f) / 0.5);
+
+    memcpy(broad_com->tx_buff_, &gimbal_data, 8);
+    broad_com->Transmit(1);
+}
+
 bool Gimbal::Init()
 {
     // 等待 IMU 初始化完成（init_flag 置 1 之后再进入主循环）
@@ -16,203 +54,36 @@ bool Gimbal::Init()
     yaw.Init();
     pitch_debug = &pitch.motor_ptr->get_base();
     yaw_debug = &yaw.motor_ptr->get_base();
-    fire.Init();
 
     dwt = BSP_n::DWT_c::Get_DwtInstance();
     Virtual_Init();
-    visual_data = Get_virtual_recive_ptr();
-    return 0;
+    // visual_data = Get_virtual_recive_ptr();
+    fire.Init();
+    broad_com =
+        new BSP_n::Can_c(&hcan2, GIMBAL_ID, CHASSIS_ID, CAN_ID_STD,
+                         [this](BSP_n::Can_c* instance) { this->Decode_Chassis_Data(instance); });
 }
 
 void Gimbal::Loop()
 {
     Virtual_recive(); // 获取视觉数据
-    if (gimbal_mode == GIMBAL_ZERO_FORCE) {
-        fire.fire_zero_force();
-        fire.pluck_zero_force();
-    } else {
-        fire.Loop();
-        if (gimbal_mode == GIMBAL_MANUAL) {
-            // fire.all_fire_ctrl();
-        } else if (gimbal_mode == GIMBAL_AUTOATTACK) {
-        }
-    }
-    fire.pluck_ctrl();
-    Motor_n::DjiMotor_n::DjiMotorControl(); // 逐个算 PID
-    Motor_n::DjiMotor_n::set_GiveCurrent(); // 把 PID 输出写进分组缓冲
-    Motor_n::DjiMotor_n::MotorTransmit();   // 统一发送
-
+    Virtual_send(fire.shoot_msg.aim_color, pitch.motor_data.actual_data.actual_imu_pos,
+                 yaw.motor_data.actual_data.actual_imu_pos, -ins->Pitch,
+                 fire.shoot_msg.shoot_bullet_speed, 0, 0);
+    Gimbal2Chassis();
     update_feedback();
     mode_set();
     last_time = dwt->GetTimeline_us();
+    fire.Loop(gimbal_mode, ((abs(visual_data->pitch - pitch.motor_data.actual_data.actual_imu_pos) <
+                             pitch_dif_target) &&
+                            (abs(visual_data->yaw - yaw.motor_data.actual_data.actual_imu_pos) <
+                             yaw_dif_target)));
     crtl_calc();
     dt = dwt->GetTimeline_us() - last_time;
     pitch.motor_ptr->Transmit(1);
     yaw.motor_ptr->Transmit(1);
 }
 
-void pitch_c::Init()
-{
-    MM::Motor_Base_Config_t pitchMotorConfig =
-        MM::Motor_Base_Config_t("Pitch", MM::Motor_Type_euc::DM4310)
-            .SetControlSetting(
-                MM::Motor_Control_Setting_t{MM::Closeloop_Type_euc::ANGLE_AND_SPEED_LOOP})
-            .SetPIDConfig(
-                alg_n::PidInitConfig_t // Angle PID
-                {
-                    .Kp = 0.6f,
-                    .Ki = 0.0097f,
-                    .Kd = 0.3f,
-                    .Kfa = 0.0f,
-                    .Kfb = 0.0f,
-                    .ActualValueSource = nullptr,
-                    .mode = Output_Limit | Integral_Limit | Feedforward | DerivativeFilter |
-                            ChangingIntegrationRate,
-                    .max_out = 30.0f,
-                    .max_Ierror = 100.0f,
-                    .errorabsmax = 1.2f,
-                    .errorabsmin = 0.3f,
-                    .d_filter_num = 0.2f,
-                },
-                alg_n::PidInitConfig_t // Speed PID
-                {
-                    .Kp = 0.5f,
-                    .Ki = 0.0f,
-                    .Kd = 0.2f,
-                    .ActualValueSource = nullptr,
-                    .mode = Output_Limit | DerivativeFilter,
-                    .max_out = 7.0f, // 7nm
-                },
-                alg_n::PidInitConfig_t // current PID
-                {
-                    .Kp = 0.0f,
-                    .Ki = 0.0f,
-                    .Kd = 0.0f,
-                    .ActualValueSource = nullptr,
-                    .mode = Output_Limit,
-                    .max_out = 7.0f, // 7nm
-                })
-
-            .SetCANConfig(BSP_n::CanInitConfig_s{.can_handle = &hcan1,
-                                                 .tx_id = 0xE1, // Slave ID
-                                                 .rx_id = 0xE2, // Master ID
-                                                 .SAND_IDE = CAN_ID_STD})
-
-            .SetMechanicalParams(MM::Motor_Data_t::Motor_Fixed_Param_t{.zero_offset = 0.0f,
-                                                                       .radius = 0.05f,
-                                                                       .ecd2length = 0.0f,
-                                                                       .ratio = 10.0f})
-
-            .SetOutputLimit(7.0f, -7.0f);
-    Motor_n::DmMotor_n::DmDriver_c::DM_ModePrame_s pitchMotorDMConfig = {
-        .kp_min = 0,
-        .kp_max = 500,
-        .kd_min = 0,
-        .kd_max = 5, // 这两项固定不能修改
-        .v_min = -30,
-        .v_max = 30,
-        .p_min = -12.5,
-        .p_max = 12.5,
-        .t_min = -10,
-        .t_max = 10, // 这三项必须与上位机软件参数一致
-    };
-    // 初始化电机
-    this->motor_ptr = new Motor_n::DmMotor_n::DmDriver_c(pitchMotorConfig, pitchMotorDMConfig);
-    memset(&motor_data, 0, sizeof(motor_data));
-    this->motor_ptr->Enable();
-    /*控制器初始化*/
-    Position_pid.Init(pitchMotorConfig.angle_PID);
-    Position_pid.Clear();
-    Speed_pid.Init(pitchMotorConfig.speed_PID);
-    Speed_pid.Clear();
-    /*滤波器初始化*/
-    gyro_filter = new alg_n::FirstOrderFilter_c(filter_num);
-}
-
-void yaw_c::Init()
-{
-    MM::Motor_Base_Config_t yawMotorConfig =
-        MM::Motor_Base_Config_t("Yaw", MM::Motor_Type_euc::DM4310)
-            .SetControlSetting(
-                MM::Motor_Control_Setting_t{MM::Closeloop_Type_euc::ANGLE_AND_SPEED_LOOP})
-            .SetPIDConfig(
-                // yaw轴角度环调这里！！代码有屎反正用的是这个！！
-                //@warning
-                alg_n::PidInitConfig_t // Angle PID
-                {
-
-                    .Kp = 0.5f,
-                    .Ki = 0.015f,
-                    .Kd = 1.0f,
-                    .Kfa = 1.2f,
-                    .Kfb = 0.0f,
-                    .ActualValueSource = nullptr,
-                    .mode = Output_Limit | Integral_Limit | Feedforward | ChangingIntegrationRate,
-                    .max_out = 30.0f,
-                    .max_Ierror = 30.0f,
-                    .errorabsmax = 1.15f,
-                    .errorabsmin = 0.85f},
-                alg_n::PidInitConfig_t // Speed PID
-                {
-                    .Kp = 0.72f,
-                    .Ki = 0.0f,
-                    .Kd = 0.08f,
-                    .Kfa = 1.0f,
-                    .ActualValueSource = nullptr,
-                    .mode = Output_Limit | DerivativeFilter | Integral_Limit | Feedforward |
-                            ChangingIntegrationRate,
-                    .max_out = 7.0f, // 7nm
-                    .max_Ierror = 100.0f,
-                    .errorabsmax = 0.0f,
-                    .errorabsmin = 0.0f,
-                    .d_filter_num = 1,
-                    .out_filter_num = 1.0f,
-                },
-                alg_n::PidInitConfig_t // current PID
-                {
-                    .Kp = 0.0f,
-                    .Ki = 0.0f,
-                    .Kd = 0.0f,
-                    .ActualValueSource = nullptr,
-                    .mode = Output_Limit,
-                    .max_out = 7.0f, // 7nm
-                })
-
-            .SetCANConfig(BSP_n::CanInitConfig_s{.can_handle = &hcan2,
-                                                 .tx_id = 0xF1, // Slave ID
-                                                 .rx_id = 0xF2, // Master ID
-                                                 .SAND_IDE = CAN_ID_STD})
-
-            .SetMechanicalParams(MM::Motor_Data_t::Motor_Fixed_Param_t{.zero_offset = 0.0f,
-                                                                       .radius = 0.05f,
-                                                                       .ecd2length = 0.0f,
-                                                                       .ratio = 10.0f})
-
-            .SetOutputLimit(7.0f, -7.0f);
-    Motor_n::DmMotor_n::DmDriver_c::DM_ModePrame_s yawMotorDMConfig = {
-        .kp_min = 0,
-        .kp_max = 500,
-        .kd_min = 0,
-        .kd_max = 5, // 这两项固定不能修改
-        .v_min = -30,
-        .v_max = 30,
-        .p_min = -12.56637,
-        .p_max = 12.56637,
-        .t_min = -10,
-        .t_max = 10, // 这三项必须与上位机软件参数一致
-    };
-    // 初始化电机
-    this->motor_ptr = new Motor_n::DmMotor_n::DmDriver_c(yawMotorConfig, yawMotorDMConfig);
-    memset(&motor_data, 0, sizeof(motor_data));
-    this->motor_ptr->Enable();
-    /*控制器初始化*/
-    Position_pid.Init(yawMotorConfig.angle_PID);
-    Position_pid.Clear();
-    Speed_pid.Init(yawMotorConfig.speed_PID);
-    Speed_pid.Clear();
-    /*滤波器初始化*/
-    gyro_filter = new alg_n::FirstOrderFilter_c(filter_num);
-}
 
 /**
  * @brief 基于pitch编码值更新imu上下限
@@ -278,6 +149,9 @@ void Gimbal::target_set()
         yaw.motor_data.mannal_set = yaw.motor_data.actual_data.actual_imu_pos;
     }
 
+    pitch.motor_data.virtual_set = visual_data->pitch;
+    yaw.motor_data.virtual_set = visual_data->yaw;
+
     /*对锁imu的情况进行上下限幅*/
     user_value_limit(pitch.motor_data.mannal_set, imu_min, imu_max);
     user_value_limit(pitch.motor_data.virtual_set, imu_min, imu_max);
@@ -288,7 +162,10 @@ void Gimbal::target_set()
             pitch.motor_data.final_set = pitch.motor_data.mannal_set;
             yaw.motor_data.final_set = yaw.motor_data.mannal_set;
             break;
-        case GIMBAL_AUTOATTACK: break;
+        case GIMBAL_AUTOATTACK:
+            pitch.motor_data.final_set = pitch.motor_data.virtual_set;
+            yaw.motor_data.final_set = yaw.motor_data.virtual_set;
+            break;
         case GIMBAL_ZERO_FORCE:
         default:
             pitch.motor_data.final_set = pitch.motor_data.actual_data.actual_imu_pos;
@@ -312,6 +189,11 @@ void Gimbal::mode_set()
     last_behav = rc_behav;
     switch (robo_cmd->dt7_data_->s2) {
         case DT7_SW_UP: // 遥控器右侧拨杆向上拨，视觉控制云台自瞄
+            if (visual_data->distance == 0 || visual_data->distance == -1) {
+                rc_behav = GIMBAL_MANUAL;
+            } else {
+                rc_behav = GIMBAL_AUTOATTACK;
+            }
             break;
         case DT7_SW_MID: // 遥控器右侧拨杆向中间拨，手动控制云台
             rc_behav = GIMBAL_MANUAL;
