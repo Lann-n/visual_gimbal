@@ -19,7 +19,7 @@ void Virtual_Init()
 
 void Virtual_Clear()
 {
-    memset(&Visual_Rx, 0, sizeof(Visual_Rx_t));
+    // memset(&Visual_Rx, 0, sizeof(Visual_Rx_t));
     Visual_Rx.distance = -1.0f;
     // fifo_s_free(usb_info);
 }

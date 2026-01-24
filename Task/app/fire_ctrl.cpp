@@ -192,7 +192,10 @@ void fire_c::mode_set(Behaviour_e gimbal_mode, bool gimbal_closed)
                               return;
                           else {
                               if (gimbal_mode == GIMBAL_AUTOATTACK && (visual_data->fire_flag == 0 || gimbal_closed == false))
-                                  return;
+                              {
+                                fire_mode = READY;
+                                return;
+                              }
                               fire_mode = AUTO;
                               motor_set_value.pluck_motor_auto_set = fire_rate(25);
                           }

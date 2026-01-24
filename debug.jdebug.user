@@ -1,36 +1,39 @@
 
 
-GraphedExpression="((gimbal_instance).fire).fire_mode", DisplayFormat=DISPLAY_FORMAT_DEC, Color=#e56a6f, Show=0
-GraphedExpression="((((gimbal_instance).fire).auto_pid).measure_).SetValue", Color=#35792b, Show=0
-GraphedExpression="((((gimbal_instance).fire).auto_pid).measure_).ActualValue", Color=#769dda, Show=0
-OpenDocument="BMI088driver.cpp", FilePath="D:/Documents/RoboMaster2026/project/visual_gimbal/ACE_ECF_26/Module/imu/BMI088driver.cpp", Line=351
+GraphedExpression="((((gimbal_instance).yaw).Position_pid).measure_).SetValue", Color=#e56a6f, Show=0
+GraphedExpression="((((gimbal_instance).yaw).Position_pid).measure_).ActualValue", Color=#35792b, Show=0
+GraphedExpression="((((gimbal_instance).yaw).Speed_pid).measure_).SetValue", Color=#769dda, Show=0
+GraphedExpression="((((gimbal_instance).yaw).Speed_pid).measure_).ActualValue", Color=#b14f0d, Show=0
+GraphedExpression="((((gimbal_instance).yaw).Visual_angle_pid).measure_).SetValue", Color=#b3c38e
+GraphedExpression="((((gimbal_instance).yaw).Visual_angle_pid).measure_).ActualValue", Color=#ab7b05
+OpenDocument="usbd_cdc_if.c", FilePath="D:/Documents/RoboMaster2026/project/visual_gimbal/USB_DEVICE/App/usbd_cdc_if.c", Line=288
 OpenDocument="imu_task.cpp", FilePath="D:/Documents/RoboMaster2026/project/visual_gimbal/ACE_ECF_26/Module/imu/imu_task.cpp", Line=27
-OpenDocument="gimbal.cpp", FilePath="D:/Documents/RoboMaster2026/project/visual_gimbal/Task/app/gimbal.cpp", Line=24
+OpenDocument="gimbal.cpp", FilePath="D:/Documents/RoboMaster2026/project/visual_gimbal/Task/app/gimbal.cpp", Line=0
+OpenDocument="Vision.cpp", FilePath="D:/Documents/RoboMaster2026/project/visual_gimbal/Task/app/Vision.cpp", Line=9
 OpenDocument="main.c", FilePath="D:/Documents/RoboMaster2026/project/visual_gimbal/Core/Src/main.c", Line=67
-OpenDocument="startup_stm32f405xx.s", FilePath="D:/Documents/RoboMaster2026/project/visual_gimbal/startup_stm32f405xx.s", Line=55
-OpenDocument="usbd_cdc_if.c", FilePath="D:/Documents/RoboMaster2026/project/visual_gimbal/USB_DEVICE/App/usbd_cdc_if.c", Line=255
 OpenDocument="fire_ctrl.cpp", FilePath="D:/Documents/RoboMaster2026/project/visual_gimbal/Task/app/fire_ctrl.cpp", Line=135
 OpenDocument="gimbal.hpp", FilePath="D:/Documents/RoboMaster2026/project/visual_gimbal/Task/app/gimbal.hpp", Line=15
 OpenToolbar="Debug", Floating=0, x=0, y=0
-OpenWindow="Call Stack", DockArea=RIGHT, x=0, y=1, w=403, h=348, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Call Stack", DockArea=RIGHT, x=0, y=1, w=403, h=324, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 OpenWindow="Source Files", DockArea=LEFT, x=0, y=0, w=544, h=526, TabPos=0, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
-OpenWindow="Disassembly", DockArea=RIGHT, x=0, y=0, w=403, h=205, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
-OpenWindow="Watched Data 1", DockArea=LEFT, x=0, y=0, w=544, h=526, TabPos=1, TopOfStack=1, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Disassembly", DockArea=RIGHT, x=0, y=0, w=403, h=229, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 OpenWindow="Data Sampling", DockArea=BOTTOM, x=0, y=0, w=1024, h=331, TabPos=1, TopOfStack=1, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, VisibleTab=0, UniformSampleSpacing=0
-OpenWindow="Timeline", DockArea=FLOATING, x=586, y=179, w=1087, h=798, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=1, DataPaneShown=1, PowerPaneShown=0, CodePaneShown=0, PinCursor="Cursor Movable", TimePerDiv="500 ms / Div", TimeStampFormat="Time", DataGraphDrawAsPoints=0, DataGraphLegendShown=1, DataGraphUniformSampleSpacing=0, DataGraphLegendPosition="0;0", DataGraphShowNamesAtCursor=0, PowerGraphDrawAsPoints=0, PowerGraphLegendShown=0, PowerGraphAvgFilterTime=Off, PowerGraphAvgFilterLen=Off, PowerGraphUniformSampleSpacing=0, PowerGraphLegendPosition="750;-97", CodeGraphLegendShown=0, CodeGraphLegendPosition="765;0"
+OpenWindow="Timeline", DockArea=FLOATING, x=554, y=164, w=1087, h=798, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=1, DataPaneShown=1, PowerPaneShown=0, CodePaneShown=0, PinCursor="Cursor Movable", TimePerDiv="500 ms / Div", TimeStampFormat="Time", DataGraphDrawAsPoints=0, DataGraphLegendShown=1, DataGraphUniformSampleSpacing=0, DataGraphLegendPosition="72;73", DataGraphShowNamesAtCursor=0, PowerGraphDrawAsPoints=0, PowerGraphLegendShown=0, PowerGraphAvgFilterTime=Off, PowerGraphAvgFilterLen=Off, PowerGraphUniformSampleSpacing=0, PowerGraphLegendPosition="750;-97", CodeGraphLegendShown=0, CodeGraphLegendPosition="765;0"
 OpenWindow="Console", DockArea=BOTTOM, x=1, y=0, w=682, h=359, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Watched Data 1", DockArea=LEFT, x=0, y=0, w=544, h=526, TabPos=1, TopOfStack=1, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 OpenWindow="Watched Data 2", DockArea=BOTTOM, x=0, y=0, w=1024, h=331, TabPos=0, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 SmartViewPlugin="", Page="", Toolbar="Hidden", Window="SmartView 1"
-TableHeader="Watched Data 2", SortCol="Expression", SortOrder="ASCENDING", VisibleCols=["Expression";"Value";"Location";"Refresh";"Access"], ColWidths=[250;150;100;576;100]
 TableHeader="Source Files", SortCol="File", SortOrder="ASCENDING", VisibleCols=["File";"Status";"Size";"#Insts";"Path"], ColWidths=[485;100;100;100;1367]
+TableHeader="Watched Data 1", SortCol="Expression", SortOrder="ASCENDING", VisibleCols=["Expression";"Value";"Location";"Refresh";"Access"], ColWidths=[262;178;131;100;100]
+TableHeader="Watched Data 2", SortCol="Expression", SortOrder="ASCENDING", VisibleCols=["Expression";"Value";"Location";"Refresh";"Access"], ColWidths=[250;150;100;576;100]
 TableHeader="Call Stack", SortCol="Function", SortOrder="ASCENDING", VisibleCols=["Function";"Stack Frame";"Source";"PC";"Return Address";"Stack Used"], ColWidths=[189;153;187;100;130;122]
 TableHeader="Power Sampling", SortCol="None", SortOrder="ASCENDING", VisibleCols=["Index";"Time";"Ch 0"], ColWidths=[100;100;100]
 TableHeader="Task List", SortCol="None", SortOrder="ASCENDING", VisibleCols=["Name";"Run Count";"Priority";"Status";"Timeout";"Stack Info";"ID";"Mutex Count";"Notified Value";"Notify State"], ColWidths=[110;110;110;110;110;110;110;110;110;110]
 TableHeader="RegisterSelectionDialog", SortCol="None", SortOrder="ASCENDING", VisibleCols=[], ColWidths=[]
-TableHeader="Watched Data 1", SortCol="Expression", SortOrder="ASCENDING", VisibleCols=["Expression";"Value";"Location";"Refresh";"Access"], ColWidths=[262;178;131;100;100]
-TableHeader="Data Sampling Table", SortCol="None", SortOrder="ASCENDING", VisibleCols=["Index";"Time";" ((gimbal_instance).fire).fire_mode";" ((((gimbal_instance).fire).auto_pid).measure_).SetValue";" ((((gimbal_instance).fire).auto_pid).measure_).ActualValue"], ColWidths=[100;100;100;100;100]
-TableHeader="Data Sampling Setup", SortCol="Type", SortOrder="ASCENDING", VisibleCols=["Expression";"Type";"Value";"Min";"Max";"Average";"# Changes";"Min. Change";"Max. Change"], ColWidths=[100;113;100;100;100;102;124;146;146]
 TableHeader="TargetExceptionDialog", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Value";"Address";"Description"], ColWidths=[200;100;100;359]
+TableHeader="Data Sampling Table", SortCol="None", SortOrder="ASCENDING", VisibleCols=["Index";"Time";" ((((gimbal_instance).yaw).Position_pid).measure_).SetValue";" ((((gimbal_instance).yaw).Position_pid).measure_).ActualValue";" ((((gimbal_instance).yaw).Speed_pid).measure_).SetValue";" ((((gimbal_instance).yaw).Speed_pid).measure_).ActualValue";" ((((gimbal_instance).yaw).Visual_angle_pid).measure_).SetValue";" ((((gimbal_instance).yaw).Visual_angle_pid).measure_).ActualValue"], ColWidths=[100;100;100;100;100;100;100;100]
+TableHeader="Data Sampling Setup", SortCol="Type", SortOrder="ASCENDING", VisibleCols=["Expression";"Type";"Value";"Min";"Max";"Average";"# Changes";"Min. Change";"Max. Change"], ColWidths=[100;100;146;146;135;146;124;146;146]
 WatchedExpression="gimbal_instance", RefreshRate=5, Window=Watched Data 1
+WatchedExpression="Visual_Tx", RefreshRate=1, Window=Watched Data 1
 WatchedExpression="gimbal_instance", RefreshRate=5, Window=Watched Data 2
 WatchedExpression="pluck_motor->motor_data_.motor_raw_data.feedback_speed", Window=Watched Data 2

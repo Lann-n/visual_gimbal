@@ -124,25 +124,25 @@ inline MM::Motor_Base_Config_t yawMotorConfig =
             {
 
                 .Kp = 0.5f,
-                .Ki = 0.015f,
-                .Kd = 1.0f,
-                .Kfa = 1.2f,
+                .Ki = 0.01f,
+                .Kd = 4.0f,
+                .Kfa = 0.0f,
                 .Kfb = 0.0f,
                 .ActualValueSource = nullptr,
                 .mode = Output_Limit | Integral_Limit | Feedforward | ChangingIntegrationRate,
                 .max_out = 30.0f,
-                .max_Ierror = 30.0f,
-                .errorabsmax = 1.15f,
-                .errorabsmin = 0.85f},
+                .max_Ierror = 100.0f,
+                .errorabsmax = 1.8f,
+                .errorabsmin = 0.5f},
             alg_n::PidInitConfig_t // Speed PID
             {
-                .Kp = 0.72f,
+                .Kp = 0.6f,
                 .Ki = 0.0f,
-                .Kd = 0.08f,
-                .Kfa = 1.0f,
+                .Kd = 0.02f,
+                .Kfa = 0.0f,
                 .ActualValueSource = nullptr,
-                .mode = Output_Limit | DerivativeFilter | Integral_Limit | Feedforward |
-                        ChangingIntegrationRate,
+                .mode = Output_Limit | DerivativeFilter | Integral_Limit | OutputFilter |
+                        Feedforward | ChangingIntegrationRate,
                 .max_out = 7.0f, // 7nm
                 .max_Ierror = 100.0f,
                 .errorabsmax = 0.0f,
@@ -213,25 +213,25 @@ inline alg_n::PidInitConfig_t pitch_visual_speed_config // Speed PID
 inline alg_n::PidInitConfig_t yaw_visual_angle_config // Angle PID
     {
 
-        .Kp = 0.5f,
-        .Ki = 0.015f,
-        .Kd = 1.0f,
-        .Kfa = 1.2f,
+        .Kp = 0.6f,
+        .Ki = 0.01f,
+        .Kd = 4.0f,
+        .Kfa = 0.0f,
         .Kfb = 0.0f,
         .ActualValueSource = nullptr,
         .mode = Output_Limit | Integral_Limit | Feedforward | ChangingIntegrationRate,
         .max_out = 30.0f,
-        .max_Ierror = 30.0f,
-        .errorabsmax = 1.15f,
-        .errorabsmin = 0.85f};
+        .max_Ierror = 100.0f,
+        .errorabsmax = 1.8f,
+        .errorabsmin = 0.5f};
 inline alg_n::PidInitConfig_t yaw_visual_speed_config // Speed PID
     {
-        .Kp = 0.72f,
+        .Kp = 0.6f,
         .Ki = 0.0f,
-        .Kd = 0.08f,
-        .Kfa = 1.0f,
+        .Kd = 0.02f,
+        .Kfa = 0.0f,
         .ActualValueSource = nullptr,
-        .mode = Output_Limit | DerivativeFilter | Integral_Limit | Feedforward |
+        .mode = Output_Limit | DerivativeFilter | Integral_Limit | OutputFilter | Feedforward |
                 ChangingIntegrationRate,
         .max_out = 7.0f, // 7nm
         .max_Ierror = 100.0f,
@@ -274,6 +274,8 @@ public:
     Motot_Data_t motor_data;
     alg_n::PID_c Position_pid;
     alg_n::PID_c Speed_pid;
+    alg_n::PID_c Visual_angle_pid;
+    alg_n::PID_c Visual_speed_pid;
     float filter_num = 1.0f;
     alg_n::FirstOrderFilter_c* gyro_filter; // 角速度滤波结构体
     /*控制器中间量*/
@@ -289,9 +291,9 @@ public:
         this->motor_ptr->Enable();
         /*控制器初始化*/
         Position_pid.Init(pitchMotorConfig.angle_PID);
-        Position_pid.Clear();
         Speed_pid.Init(pitchMotorConfig.speed_PID);
-        Speed_pid.Clear();
+        Visual_angle_pid.Init(pitch_visual_angle_config);
+        Visual_speed_pid.Init(pitch_visual_speed_config);
         /*滤波器初始化*/
         gyro_filter = new alg_n::FirstOrderFilter_c(filter_num);
     }
@@ -305,6 +307,8 @@ public:
     Motot_Data_t motor_data;
     alg_n::PID_c Position_pid;
     alg_n::PID_c Speed_pid;
+    alg_n::PID_c Visual_angle_pid;
+    alg_n::PID_c Visual_speed_pid;
     float filter_num = 1.0f;
     alg_n::FirstOrderFilter_c* gyro_filter; // 角速度滤波结构体
     /*控制器中间量*/
@@ -321,9 +325,9 @@ public:
         this->motor_ptr->Enable();
         /*控制器初始化*/
         Position_pid.Init(yawMotorConfig.angle_PID);
-        Position_pid.Clear();
         Speed_pid.Init(yawMotorConfig.speed_PID);
-        Speed_pid.Clear();
+        Visual_angle_pid.Init(yaw_visual_angle_config);
+        Visual_speed_pid.Init(yaw_visual_speed_config);
         /*滤波器初始化*/
         gyro_filter = new alg_n::FirstOrderFilter_c(filter_num);
     }

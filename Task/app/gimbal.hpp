@@ -88,6 +88,7 @@ public:
     /*发射机构*/
     fire_c fire;
 
+    uint64_t task_cnt;
 public:
     // 用户函数
     bool Init();
