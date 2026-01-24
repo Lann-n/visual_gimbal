@@ -24,6 +24,7 @@ class fire_c;
 /*云台类*/
 class Gimbal
 {
+#pragma pack(1) // 按1字节对齐
     typedef union {
         struct {
             uint16_t shooter_heat;
@@ -53,7 +54,7 @@ class Gimbal
         } com_packet_data;
         uint8_t tx_data[8];
     } cancom_tx_packet;
-
+#pragma pack()
 public:
     RoboCmd_c* robo_cmd;
     BMI088Heat_c* imu;

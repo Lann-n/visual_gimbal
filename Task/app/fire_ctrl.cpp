@@ -116,6 +116,7 @@ void fire_c::Loop(Behaviour_e gimbal_mode, bool gimbal_closed)
     if (gimbal_mode == GIMBAL_ZERO_FORCE) {
         fire_zero_force();
         pluck_zero_force();
+        ctrl_fire_motor();
     } else {
         mode_set(gimbal_mode, gimbal_closed);
         ctrl_fire_motor();
@@ -134,12 +135,12 @@ void fire_c::fire_zero_force()
     fire_mode = NO_FIRE;
     motor_set_value.left_motor_speed_set = 0;
     motor_set_value.right_motor_speed_set = 0;
-    left_motor->Disable();
-    right_motor->Disable();
-    left_motor->motor_data_.clear();
-    right_motor->motor_data_.clear();
-    left_motor->SetMotorOutputFix(0);
-    right_motor->SetMotorOutputFix(0);
+    // left_motor->Disable();
+    // right_motor->Disable();
+    // left_motor->motor_data_.clear();
+    // right_motor->motor_data_.clear();
+    // left_motor->SetMotorOutputFix(0);
+    // right_motor->SetMotorOutputFix(0);
 }
 
 /**

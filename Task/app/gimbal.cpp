@@ -62,6 +62,7 @@ bool Gimbal::Init()
     broad_com =
         new BSP_n::Can_c(&hcan2, GIMBAL_ID, CHASSIS_ID, CAN_ID_STD,
                          [this](BSP_n::Can_c* instance) { this->Decode_Chassis_Data(instance); });
+    return 0;
 }
 
 void Gimbal::Loop()
