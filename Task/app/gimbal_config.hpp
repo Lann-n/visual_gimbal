@@ -118,28 +118,26 @@ inline MM::Motor_Base_Config_t yawMotorConfig =
         .SetControlSetting(
             MM::Motor_Control_Setting_t{MM::Closeloop_Type_euc::ANGLE_AND_SPEED_LOOP})
         .SetPIDConfig(
-            // yaw轴角度环调这里！！代码有屎反正用的是这个！！
-            //@warning
             alg_n::PidInitConfig_t // Angle PID
             {
 
                 .Kp = 0.5f,
                 .Ki = 0.01f,
-                .Kd = 4.0f,
-                .Kfa = 0.0f,
+                .Kd = 6.0f,
+                .Kfa = 1.0f,
                 .Kfb = 0.0f,
                 .ActualValueSource = nullptr,
                 .mode = Output_Limit | Integral_Limit | Feedforward | ChangingIntegrationRate,
                 .max_out = 30.0f,
                 .max_Ierror = 100.0f,
-                .errorabsmax = 1.8f,
-                .errorabsmin = 0.5f},
+                .errorabsmax = 1.7f,
+                .errorabsmin = 0.0f},
             alg_n::PidInitConfig_t // Speed PID
             {
                 .Kp = 0.6f,
                 .Ki = 0.0f,
-                .Kd = 0.02f,
-                .Kfa = 0.0f,
+                .Kd = 0.09f,
+                .Kfa = 1.0f,
                 .ActualValueSource = nullptr,
                 .mode = Output_Limit | DerivativeFilter | Integral_Limit | OutputFilter |
                         Feedforward | ChangingIntegrationRate,

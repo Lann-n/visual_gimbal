@@ -6,6 +6,7 @@
 #include "imu_task.h"
 #include "robo_cmd.hpp"
 #include "Vision.hpp"
+#include "visual_contrl.hpp"
 #include <cstring>
 #include <stdlib.h>
 
@@ -69,9 +70,10 @@ public:
     Visual_Rx_t* visual_data;
     float pitch_dif_target = 0.5f;
     float yaw_dif_target = 0.5f;
-    /*云台电机相关类*/
+    /*云台电机控制相关类*/
     pitch_c pitch;
     yaw_c yaw;
+    Visual_Contrl visual_contrl;
     /*上下限*/
     float reduce_angle = 0.0f;
     float increase_angle = 0.0f;
@@ -109,6 +111,11 @@ private:
     void fire_ctrl();
     void Decode_Chassis_Data(BSP_n::Can_c* instance);
     void Gimbal2Chassis();
+    float gravity_compensation_f(float b)
+    {
+        static float q = 0.5992f;
+        return q * arm_cos_f32((b+61.8387)*(PI/180.f));
+    }
     inline void enable_motor()
     {
         CONTROL_SEND_HZ(100);
