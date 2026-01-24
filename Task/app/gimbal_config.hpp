@@ -56,25 +56,26 @@ inline MM::Motor_Base_Config_t pitchMotorConfig =
         .SetPIDConfig(
             alg_n::PidInitConfig_t // Angle PID
             {
-                .Kp = 0.6f,
-                .Ki = 0.0097f,
-                .Kd = 0.3f,
-                .Kfa = 0.0f,
+                .Kp = 0.55f,
+                .Ki = 0.01f,
+                .Kd = 0.8f,
+                .Kfa = 10.0f,
                 .Kfb = 0.0f,
                 .ActualValueSource = nullptr,
                 .mode = Output_Limit | Integral_Limit | Feedforward | DerivativeFilter |
                         ChangingIntegrationRate,
                 .max_out = 30.0f,
-                .max_Ierror = 100.0f,
-                .errorabsmax = 1.2f,
-                .errorabsmin = 0.3f,
-                .d_filter_num = 0.2f,
+                .max_Ierror = 70.0f,
+                .errorabsmax = 2.0f,
+                .errorabsmin = 0.0f,
+                .d_filter_num = 0.0f,
             },
             alg_n::PidInitConfig_t // Speed PID
             {
-                .Kp = 0.5f,
+                .Kp = 0.7f,
                 .Ki = 0.0f,
-                .Kd = 0.2f,
+                .Kd = 0.3f,
+                .Kfa = 1.35f,
                 .ActualValueSource = nullptr,
                 .mode = Output_Limit | DerivativeFilter,
                 .max_out = 7.0f, // 7nm

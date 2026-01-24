@@ -304,8 +304,8 @@ void Gimbal::crtl_calc()
                     pitch.motor_data.final_set, pitch.motor_data.actual_data.actual_imu_pos);
                 pitch.spd_out = pitch.Visual_speed_pid.Calc(
                     pitch.pos_out, pitch.motor_data.actual_data.actual_gyro);
-                pitch.final_out = pitch.spd_out + gravity_compensation_f(
-                                                      pitch.motor_data.actual_data.actual_imu_pos);
+                G_out = gravity_compensation_f(pitch.motor_data.actual_data.actual_imu_pos);
+                pitch.final_out = pitch.spd_out + G_out;
 
                 /*yaw串级pid计算*/
                 yaw.yaw_close = gimbal_maths.float_min_distance(
@@ -325,8 +325,8 @@ void Gimbal::crtl_calc()
                                                     pitch.motor_data.actual_data.actual_imu_pos);
             pitch.spd_out =
                 pitch.Speed_pid.Calc(pitch.pos_out, pitch.motor_data.actual_data.actual_gyro);
-            pitch.final_out =
-                pitch.spd_out + gravity_compensation_f(pitch.motor_data.actual_data.actual_imu_pos);
+            G_out = gravity_compensation_f(pitch.motor_data.actual_data.actual_imu_pos);
+            pitch.final_out = pitch.spd_out + G_out;
 
             /*yaw串级pid计算*/
             yaw.yaw_close = gimbal_maths.float_min_distance(

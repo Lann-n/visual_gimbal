@@ -74,6 +74,8 @@ public:
     pitch_c pitch;
     yaw_c yaw;
     Visual_Contrl visual_contrl;
+    float mg = 1.35f;
+    float G_out;
     /*上下限*/
     float reduce_angle = 0.0f;
     float increase_angle = 0.0f;
@@ -113,8 +115,7 @@ private:
     void Gimbal2Chassis();
     float gravity_compensation_f(float b)
     {
-        static float q = 0.5992f;
-        return q * arm_cos_f32((b+61.8387)*(PI/180.f));
+        return mg * arm_cos_f32((b+61.8387)*(PI/180.f));
     }
     inline void enable_motor()
     {
