@@ -5,9 +5,9 @@
 #include "Module/motor/DJI/dji_driver.hpp"
 #include "gimbal_config.hpp"
 #include "robo_cmd.hpp"
-
+#include "Vision.hpp"
 extern "C" {
-#include "Vision.h"
+// #include "Vision.h"
 }
 
 // m/s->rpm

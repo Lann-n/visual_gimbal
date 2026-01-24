@@ -1,7 +1,7 @@
 #ifndef __VISUAL_CONFIG_H
 #define __VISUAL_CONFIG_H
 
-#include "fifo.h"
+#include "Algorithm/user_maths/fifo/fifo.h"
 
 typedef struct
 {

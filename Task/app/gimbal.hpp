@@ -5,11 +5,12 @@
 #include "gimbal_config.hpp"
 #include "imu_task.h"
 #include "robo_cmd.hpp"
+#include "Vision.hpp"
 #include <cstring>
 #include <stdlib.h>
 
 extern "C" {
-#include "Vision.h"
+// #include "Vision.h"
 }
 
 // 运行几次发送一次

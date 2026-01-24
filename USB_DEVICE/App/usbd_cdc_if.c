@@ -22,7 +22,7 @@
 #include "usbd_cdc_if.h"
 
 /* USER CODE BEGIN INCLUDE */
-#include "Vision.h"
+#include "visual_config.h"
 extern fifo_s_t *usb_info;
 /* USER CODE END INCLUDE */
 

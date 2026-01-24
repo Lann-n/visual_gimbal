@@ -57,7 +57,7 @@ bool Gimbal::Init()
 
     dwt = BSP_n::DWT_c::Get_DwtInstance();
     Virtual_Init();
-    // visual_data = Get_virtual_recive_ptr();
+    visual_data = Get_virtual_recive_ptr();
     fire.Init();
     broad_com =
         new BSP_n::Can_c(&hcan2, GIMBAL_ID, CHASSIS_ID, CAN_ID_STD,

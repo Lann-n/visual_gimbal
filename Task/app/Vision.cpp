@@ -1,11 +1,12 @@
 // 视觉任务，现在无需电控下位机进行弹道解算，保证通讯稳定不单开任务
-#include "Vision.h"
-#include "fifo.h"
+#include "Vision.hpp"
+// #include "fifo.h"
 
 fifo_s_t *usb_info = NULL;
 Visual_Rx_t Visual_Rx;
 Visual_Tx_t Visual_Tx;
 float Send_Pitch_Compeny = 0.0f; // pitch补偿
+SafeTask_c *visual_safe;
 
 void Virtual_Init()
 {
@@ -13,14 +14,23 @@ void Virtual_Init()
     memset(&Visual_Tx, 0, sizeof(Visual_Tx_t));
     Visual_Rx.distance = -1.0f;
     usb_info = fifo_s_create(96);
+    visual_safe = new SafeTask_c("visual_safe", 200, Virtual_Clear, nullptr);
+}
+
+void Virtual_Clear()
+{
+    memset(&Visual_Rx, 0, sizeof(Visual_Rx_t));
+    Visual_Rx.distance = -1.0f;
+    // fifo_s_free(usb_info);
 }
 
 void Virtual_recive(void)
 {
     if (fifo_s_isempty(usb_info) != 1)
     {
+        visual_safe->Online();
         static uint8_t read_buff[VIRTUAL_DATA_LEN];
-        fifo_s_gets(usb_info, read_buff, VIRTUAL_DATA_LEN);
+        fifo_s_gets(usb_info, (char*)read_buff, VIRTUAL_DATA_LEN);
         if (read_buff[0] == 0xFF && read_buff[VIRTUAL_DATA_LEN-1] == 0xFE)
         {
             memcpy(&Visual_Rx.fire_flag, &read_buff[1], 1); // 允许开火标志位
