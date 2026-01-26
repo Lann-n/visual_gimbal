@@ -11,6 +11,7 @@ void Gimbal::Decode_Chassis_Data(BSP_n::Can_c* instance)
     fire.shoot_msg.shoot_bullet_speed = chassis_data.com_packet_data.bullet_speed / 100.0f;
     fire.shoot_msg.aim_color = chassis_data.com_packet_data.aim_color;
     fire.shoot_msg.robot_level = chassis_data.com_packet_data.robot_level;
+    chassis_yaw_dot = (chassis_data.com_packet_data.yaw_dot - 1024.0f) / 1024.0f * 20.0f;
 }
 
 void Gimbal::Gimbal2Chassis()
@@ -73,17 +74,15 @@ bool Gimbal::Init()
 void Gimbal::Loop()
 {
     Virtual_recive(); // 获取视觉数据
-    Virtual_send(fire.shoot_msg.aim_color, pitch.motor_data.actual_data.actual_imu_pos,
-                 yaw.motor_data.actual_data.actual_imu_pos, -ins->Pitch,
+    Virtual_send(fire.shoot_msg.aim_color, ins->Pitch, ins->Yaw, ins->Roll,
                  fire.shoot_msg.shoot_bullet_speed, 0, 0);
     Gimbal2Chassis();
     update_feedback();
     mode_set();
     last_time = dwt->GetTimeline_ms();
-    fire.Loop(gimbal_mode, ((abs(visual_data->pitch - pitch.motor_data.actual_data.actual_imu_pos) <
-                             pitch_dif_target) &&
-                            (abs(visual_data->yaw - yaw.motor_data.actual_data.actual_imu_pos) <
-                             yaw_dif_target)));
+    pitch_dif = abs(visual_data->pitch - pitch.motor_data.actual_data.actual_imu_pos);
+    yaw_dif = abs(visual_data->yaw - yaw.motor_data.actual_data.actual_imu_pos);
+    fire.Loop(gimbal_mode, ((pitch_dif < pitch_dif_target) && (yaw_dif < yaw_dif_target)));
     crtl_calc();
     dt = dwt->GetTimeline_ms() - last_time;
     pitch.motor_ptr->Transmit(1);
@@ -124,7 +123,7 @@ void Gimbal::update_feedback()
 
     /*yaw数据更新*/
     yaw.motor_data.actual_data.actual_imu_pos = ins->Yaw;
-    yaw.motor_data.actual_data.actual_gyro = ins->Gyro[2];
+    yaw.motor_data.actual_data.actual_gyro = yaw.gyro_filter->Calc(ins->Gyro[2]);
     yaw.motor_data.actual_data.actual_ecd_pos = gimbal_maths.loop_fp32_constrain(
         yaw.motor_ptr->motor_data_.motor_processed_data.absolute_angle, -180.0f, 180.0f);
     yaw.motor_data.actual_data.actual_spd =
@@ -223,11 +222,19 @@ void Gimbal::mode_set()
             // pitch.Speed_pid.UpdateParam(pitch_visual_speed_config);
             // yaw.Position_pid.UpdateParam(yaw_visual_angle_config);
             // yaw.Speed_pid.UpdateParam(yaw_visual_speed_config);
+            pitch.Visual_angle_pid.Clear();
+            pitch.Visual_speed_pid.Clear();
+            yaw.Visual_angle_pid.Clear();
+            yaw.Visual_speed_pid.Clear();
         } else {
             // pitch.Position_pid.UpdateParam(pitchMotorConfig.angle_PID);
             // pitch.Speed_pid.UpdateParam(pitchMotorConfig.speed_PID);
             // yaw.Position_pid.UpdateParam(yawMotorConfig.angle_PID);
             // yaw.Speed_pid.UpdateParam(yawMotorConfig.speed_PID);
+            pitch.Position_pid.Clear();
+            pitch.Speed_pid.Clear();
+            yaw.Position_pid.Clear();
+            yaw.Speed_pid.Clear();
         }
         if (last_behav == GIMBAL_MANUAL && rc_behav == GIMBAL_FIRE_TEST) // 手瞄切部署，锁编码器
         {
@@ -292,52 +299,58 @@ void Gimbal::crtl_calc()
         yaw.final_out = 0.0f;
         pitch.motor_ptr->SetMITData(0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
         yaw.motor_ptr->SetMITData(0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
-    } else {
-        if (gimbal_mode == GIMBAL_AUTOATTACK) {
-            // 两种控制模式选择
-            if (visual_contrl.use_it == true) {
-                pitch.final_out = visual_contrl.pitch_calc();
-                yaw.final_out = visual_contrl.yaw_calc();
-            } else {
-                /*pitch串级pid计算*/
-                pitch.pos_out = pitch.Visual_angle_pid.Calc(
-                    pitch.motor_data.final_set, pitch.motor_data.actual_data.actual_imu_pos);
-                pitch.spd_out = pitch.Visual_speed_pid.Calc(
-                    pitch.pos_out, pitch.motor_data.actual_data.actual_gyro);
-                G_out = gravity_compensation_f(pitch.motor_data.actual_data.actual_imu_pos);
-                pitch.final_out = pitch.spd_out + G_out;
-
-                /*yaw串级pid计算*/
-                yaw.yaw_close = gimbal_maths.float_min_distance(
-                                    yaw.motor_data.final_set,
-                                    yaw.motor_data.actual_data.actual_imu_pos, -180.0f, 180.0f) +
-                                yaw.motor_data.actual_data.actual_imu_pos;
-                yaw.pos_out = yaw.Visual_angle_pid.Calc(yaw.yaw_close,
-                                                        yaw.motor_data.actual_data.actual_imu_pos);
-                yaw.spd_out =
-                    yaw.Visual_speed_pid.Calc(yaw.pos_out, yaw.motor_data.actual_data.actual_gyro);
-                yaw.final_out = yaw.spd_out;
-            }
-
+    } 
+    else if (gimbal_mode == GIMBAL_AUTOATTACK) {
+        // 两种控制模式选择
+        if (visual_contrl.use_it == true) {
+            pitch.final_out = visual_contrl.pitch_calc();
+            yaw.final_out = visual_contrl.yaw_calc();
         } else {
             /*pitch串级pid计算*/
-            pitch.pos_out = pitch.Position_pid.Calc(pitch.motor_data.final_set,
-                                                    pitch.motor_data.actual_data.actual_imu_pos);
-            pitch.spd_out =
-                pitch.Speed_pid.Calc(pitch.pos_out, pitch.motor_data.actual_data.actual_gyro);
-            G_out = gravity_compensation_f(pitch.motor_data.actual_data.actual_imu_pos);
-            pitch.final_out = pitch.spd_out + G_out;
+            pitch.pos_out = pitch.Visual_angle_pid.Calc(pitch.motor_data.final_set,
+                                                        pitch.motor_data.actual_data.actual_imu_pos,
+                                                        visual_data->pitch_omg);
+            pitch.spd_out = pitch.Visual_speed_pid.Calc(
+                pitch.pos_out, pitch.motor_data.actual_data.actual_gyro, visual_data->pitch_gyro);
+            G_out = this->gravity_compensation_f(pitch.motor_data.actual_data.actual_imu_pos);
+            pitch.final_out = (pitch.spd_out + G_out);
 
             /*yaw串级pid计算*/
             yaw.yaw_close = gimbal_maths.float_min_distance(
                                 yaw.motor_data.final_set, yaw.motor_data.actual_data.actual_imu_pos,
                                 -180.0f, 180.0f) +
                             yaw.motor_data.actual_data.actual_imu_pos;
-            yaw.pos_out =
-                yaw.Position_pid.Calc(yaw.yaw_close, yaw.motor_data.actual_data.actual_imu_pos);
-            yaw.spd_out = yaw.Speed_pid.Calc(yaw.pos_out, yaw.motor_data.actual_data.actual_gyro);
+            yaw.pos_out = yaw.Visual_angle_pid.Calc(
+                yaw.yaw_close, yaw.motor_data.actual_data.actual_imu_pos, visual_data->yaw_omg);
+            yaw_fd_out = (this->yaw_feedforward * this->chassis_yaw_dot); // 顺从了
+            yaw.spd_out = yaw.Visual_speed_pid.Calc((yaw.pos_out + yaw_fd_out),
+                                                    yaw.motor_data.actual_data.actual_gyro,
+                                                    visual_data->yaw_gyro);
             yaw.final_out = yaw.spd_out;
+
+            pitch.motor_ptr->SetMITData(0.0f, 0.0f, 0.0f, 0.0f, pitch.final_out);
+            yaw.motor_ptr->SetMITData(0.0f, 0.0f, 0.0f, 0.0f, yaw.final_out);
         }
+
+    } 
+    else {
+        /*pitch串级pid计算*/
+        pitch.pos_out = pitch.Position_pid.Calc(pitch.motor_data.final_set,
+                                                pitch.motor_data.actual_data.actual_imu_pos);
+        pitch.spd_out =
+            pitch.Speed_pid.Calc(pitch.pos_out, pitch.motor_data.actual_data.actual_gyro);
+        G_out = this->gravity_compensation_f(pitch.motor_data.actual_data.actual_imu_pos);
+        pitch.final_out = pitch.spd_out + G_out;
+
+        /*yaw串级pid计算*/
+        yaw.yaw_close = gimbal_maths.float_min_distance(yaw.motor_data.final_set,
+                                                        yaw.motor_data.actual_data.actual_imu_pos,
+                                                        -180.0f, 180.0f) +
+                        yaw.motor_data.actual_data.actual_imu_pos;
+        yaw.pos_out =
+            yaw.Position_pid.Calc(yaw.yaw_close, yaw.motor_data.actual_data.actual_imu_pos);
+        yaw.spd_out = yaw.Speed_pid.Calc(yaw.pos_out, yaw.motor_data.actual_data.actual_gyro);
+        yaw.final_out = yaw.spd_out;
 
         pitch.motor_ptr->SetMITData(0.0f, 0.0f, 0.0f, 0.0f, pitch.final_out);
         yaw.motor_ptr->SetMITData(0.0f, 0.0f, 0.0f, 0.0f, yaw.final_out);

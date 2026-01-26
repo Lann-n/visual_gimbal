@@ -190,6 +190,7 @@ inline alg_n::PidInitConfig_t pitch_visual_angle_config // Angle PID
         .Kd = 0.3f,
         .Kfa = 0.0f,
         .Kfb = 0.0f,
+        .Kfex = 0.9f,
         .ActualValueSource = nullptr,
         .mode = Output_Limit | Integral_Limit | Feedforward | DerivativeFilter |
                 ChangingIntegrationRate,
@@ -204,31 +205,32 @@ inline alg_n::PidInitConfig_t pitch_visual_speed_config // Speed PID
         .Kp = 0.5f,
         .Ki = 0.0f,
         .Kd = 0.2f,
+        .Kfex = 1.2f,
         .ActualValueSource = nullptr,
         .mode = Output_Limit | DerivativeFilter,
         .max_out = 7.0f, // 7nm
     };
 
 inline alg_n::PidInitConfig_t yaw_visual_angle_config // Angle PID
-    {
-
-        .Kp = 0.6f,
-        .Ki = 0.01f,
-        .Kd = 4.0f,
-        .Kfa = 0.0f,
-        .Kfb = 0.0f,
-        .ActualValueSource = nullptr,
-        .mode = Output_Limit | Integral_Limit | Feedforward | ChangingIntegrationRate,
-        .max_out = 30.0f,
-        .max_Ierror = 100.0f,
-        .errorabsmax = 1.8f,
-        .errorabsmin = 0.5f};
+    {.Kp = 0.65f,
+     .Ki = 0.01f,
+     .Kd = 8.0f,
+     .Kfa = 0.0f,
+     .Kfb = 0.0f,
+     .Kfex = 1.18f,
+     .ActualValueSource = nullptr,
+     .mode = Output_Limit | Integral_Limit | Feedforward | ChangingIntegrationRate,
+     .max_out = 30.0f,
+     .max_Ierror = 100.0f,
+     .errorabsmax = 1.8f,
+     .errorabsmin = 0.5f};
 inline alg_n::PidInitConfig_t yaw_visual_speed_config // Speed PID
     {
-        .Kp = 0.6f,
+        .Kp = 0.72f,
         .Ki = 0.0f,
-        .Kd = 0.02f,
-        .Kfa = 0.0f,
+        .Kd = 0.015f,
+        .Kfa = 2.0f,
+        .Kfex = 0.0125f,
         .ActualValueSource = nullptr,
         .mode = Output_Limit | DerivativeFilter | Integral_Limit | OutputFilter | Feedforward |
                 ChangingIntegrationRate,

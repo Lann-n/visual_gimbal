@@ -68,13 +68,18 @@ public:
     /*视觉相关数据*/
     Visual_Tx_t visual_tx_data;
     Visual_Rx_t* visual_data;
+    float yaw_feedforward = -0.9f;
+    float chassis_yaw_dot = 0.0f;
+    float yaw_fd_out = 0.0f;
+    float pitch_dif = 0.0f;
+    float yaw_dif = 0.0f;
     float pitch_dif_target = 0.5f;
     float yaw_dif_target = 0.5f;
     /*云台电机控制相关类*/
     pitch_c pitch;
     yaw_c yaw;
     Visual_Contrl visual_contrl;
-    float mg = 1.35f;
+    float mg = 0.5992f;// 1.35f
     float G_out;
     /*上下限*/
     float reduce_angle = 0.0f;

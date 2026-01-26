@@ -51,8 +51,8 @@ class Visual_Contrl
 public:
     bool use_it = false;
     struct {
-        float J_pitch = 0.0f;  // pitch转动惯量
-        float mg = 0.0f;       // 质量
+        float J_pitch = J_Pitch;  // pitch转动惯量
+        float mg = 1.35f;       // 质量
         float m_offset = 0.0f; // 质心与坐标系偏移
         // 角加速度补偿pid
         alg_n::PID_c pitch_pid;
@@ -64,7 +64,7 @@ public:
         float pitch_out;
     } pitch_data;
     struct {
-        float J_yaw = 0.0f; // yaw转动惯量
+        float J_yaw = J_Yaw; // yaw转动惯量
         // 角加速度补偿pid
         alg_n::PID_c yaw_pid;
         float* theta;
@@ -103,8 +103,8 @@ public:
 
     float gravity_compensation_f(float b)
     {
-        static float q = 0.5992f;
-        return q * arm_cos_f32((b + 61.8387) * (PI / 180.f));
+        
+        return pitch_data.mg * arm_cos_f32((b + 61.8387) * (PI / 180.f));
     }
     inline float pitch_calc()
     {
