@@ -1,7 +1,7 @@
 
 
-GraphedExpression="((((gimbal_instance).yaw).Visual_speed_pid).measure_).SetValue", Color=#e56a6f
-GraphedExpression="((((gimbal_instance).yaw).Visual_speed_pid).measure_).ActualValue", Color=#35792b
+GraphedExpression="((((gimbal_instance).yaw).Visual_angle_pid).measure_).SetValue", Color=#e56a6f
+GraphedExpression="((((gimbal_instance).yaw).Visual_angle_pid).measure_).ActualValue", Color=#35792b
 OpenDocument="Vision.cpp", FilePath="D:/Documents/RoboMaster2026/project/visual_gimbal/Task/app/Vision.cpp", Line=0
 OpenDocument="main.c", FilePath="D:/Documents/RoboMaster2026/project/visual_gimbal/Core/Src/main.c", Line=65
 OpenDocument="bsp_can_template.hpp", FilePath="D:/Documents/RoboMaster2026/project/visual_gimbal/ACE_ECF_26/Bsp/CAN/bsp_can_template.hpp", Line=73
@@ -14,13 +14,13 @@ OpenDocument="usbd_cdc_if.c", FilePath="D:/Documents/RoboMaster2026/project/visu
 OpenDocument="fire_ctrl.cpp", FilePath="D:/Documents/RoboMaster2026/project/visual_gimbal/Task/app/fire_ctrl.cpp", Line=135
 OpenDocument="gimbal.cpp", FilePath="D:/Documents/RoboMaster2026/project/visual_gimbal/Task/app/gimbal.cpp", Line=81
 OpenToolbar="Debug", Floating=0, x=0, y=0
-OpenWindow="Call Stack", DockArea=RIGHT, x=0, y=1, w=403, h=299, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Call Stack", DockArea=RIGHT, x=0, y=1, w=403, h=292, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 OpenWindow="Source Files", DockArea=LEFT, x=0, y=0, w=544, h=538, TabPos=0, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
-OpenWindow="Disassembly", DockArea=RIGHT, x=0, y=0, w=403, h=262, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
-OpenWindow="Data Sampling", DockArea=BOTTOM, x=0, y=0, w=1024, h=335, TabPos=1, TopOfStack=1, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, VisibleTab=0, UniformSampleSpacing=0
-OpenWindow="Timeline", DockArea=FLOATING, x=607, y=254, w=1124, h=666, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=1, DataPaneShown=1, PowerPaneShown=0, CodePaneShown=0, PinCursor="Cursor Movable", TimePerDiv="500 ms / Div", TimeStampFormat="Time", DataGraphDrawAsPoints=0, DataGraphLegendShown=1, DataGraphUniformSampleSpacing=0, DataGraphLegendPosition="23;34", DataGraphShowNamesAtCursor=0, PowerGraphDrawAsPoints=0, PowerGraphLegendShown=0, PowerGraphAvgFilterTime=Off, PowerGraphAvgFilterLen=Off, PowerGraphUniformSampleSpacing=0, PowerGraphLegendPosition="70;20", CodeGraphLegendShown=0, CodeGraphLegendPosition="80;20"
-OpenWindow="Console", DockArea=BOTTOM, x=1, y=0, w=682, h=359, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Disassembly", DockArea=RIGHT, x=0, y=0, w=403, h=269, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 OpenWindow="Watched Data 1", DockArea=LEFT, x=0, y=0, w=544, h=538, TabPos=1, TopOfStack=1, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Data Sampling", DockArea=BOTTOM, x=0, y=0, w=1024, h=335, TabPos=1, TopOfStack=1, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, VisibleTab=0, UniformSampleSpacing=0
+OpenWindow="Timeline", DockArea=FLOATING, x=607, y=254, w=1124, h=666, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=1, DataPaneShown=1, PowerPaneShown=0, CodePaneShown=0, PinCursor="Cursor Movable", TimePerDiv="500 ms / Div", TimeStampFormat="Time", DataGraphDrawAsPoints=0, DataGraphLegendShown=1, DataGraphUniformSampleSpacing=0, DataGraphLegendPosition="41;0", DataGraphShowNamesAtCursor=0, PowerGraphDrawAsPoints=0, PowerGraphLegendShown=0, PowerGraphAvgFilterTime=Off, PowerGraphAvgFilterLen=Off, PowerGraphUniformSampleSpacing=0, PowerGraphLegendPosition="70;20", CodeGraphLegendShown=0, CodeGraphLegendPosition="80;20"
+OpenWindow="Console", DockArea=BOTTOM, x=1, y=0, w=682, h=359, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 OpenWindow="Watched Data 2", DockArea=BOTTOM, x=0, y=0, w=1024, h=335, TabPos=0, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 SmartViewPlugin="", Page="", Toolbar="Hidden", Window="SmartView 1"
 TableHeader="Watched Data 2", SortCol="Expression", SortOrder="ASCENDING", VisibleCols=["Expression";"Value";"Location";"Refresh";"Access"], ColWidths=[250;150;100;576;100]
@@ -29,10 +29,10 @@ TableHeader="Call Stack", SortCol="Function", SortOrder="ASCENDING", VisibleCols
 TableHeader="Power Sampling", SortCol="None", SortOrder="ASCENDING", VisibleCols=["Index";"Time";"Ch 0"], ColWidths=[100;100;100]
 TableHeader="Task List", SortCol="None", SortOrder="ASCENDING", VisibleCols=["Name";"Run Count";"Priority";"Status";"Timeout";"Stack Info";"ID";"Mutex Count";"Notified Value";"Notify State"], ColWidths=[110;110;110;110;110;110;110;110;110;110]
 TableHeader="RegisterSelectionDialog", SortCol="None", SortOrder="ASCENDING", VisibleCols=[], ColWidths=[]
-TableHeader="TargetExceptionDialog", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Value";"Address";"Description"], ColWidths=[200;100;100;359]
 TableHeader="Watched Data 1", SortCol="Expression", SortOrder="ASCENDING", VisibleCols=["Expression";"Value";"Location";"Refresh";"Access"], ColWidths=[262;178;131;100;100]
-TableHeader="Data Sampling Table", SortCol="None", SortOrder="ASCENDING", VisibleCols=["Index";"Time";" ((((gimbal_instance).yaw).Visual_speed_pid).measure_).SetValue";" ((((gimbal_instance).yaw).Visual_speed_pid).measure_).ActualValue"], ColWidths=[100;100;100;100]
-TableHeader="Data Sampling Setup", SortCol="Type", SortOrder="ASCENDING", VisibleCols=["Expression";"Type";"Value";"Min";"Max";"Average";"# Changes";"Min. Change";"Max. Change"], ColWidths=[100;100;144;124;114;144;115;135;135]
+TableHeader="Data Sampling Table", SortCol="None", SortOrder="ASCENDING", VisibleCols=["Index";"Time";" ((((gimbal_instance).yaw).Visual_angle_pid).measure_).SetValue";" ((((gimbal_instance).yaw).Visual_angle_pid).measure_).ActualValue"], ColWidths=[100;100;100;100]
+TableHeader="Data Sampling Setup", SortCol="Type", SortOrder="ASCENDING", VisibleCols=["Expression";"Type";"Value";"Min";"Max";"Average";"# Changes";"Min. Change";"Max. Change"], ColWidths=[100;100;114;124;114;114;115;135;135]
+TableHeader="TargetExceptionDialog", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Value";"Address";"Description"], ColWidths=[200;100;100;359]
 WatchedExpression="gimbal_instance", RefreshRate=5, Window=Watched Data 1
 WatchedExpression="Visual_Tx", RefreshRate=1, Window=Watched Data 1
 WatchedExpression="gimbal_instance", RefreshRate=5, Window=Watched Data 2

@@ -311,7 +311,7 @@ void Gimbal::crtl_calc()
                                                         pitch.motor_data.actual_data.actual_imu_pos,
                                                         visual_data->pitch_omg);
             pitch.spd_out = pitch.Visual_speed_pid.Calc(
-                pitch.pos_out, pitch.motor_data.actual_data.actual_gyro, visual_data->pitch_gyro);
+                pitch.pos_out, pitch.motor_data.actual_data.actual_spd/9.55f, visual_data->pitch_gyro);
             G_out = this->gravity_compensation_f(pitch.motor_data.actual_data.actual_imu_pos);
             pitch.final_out = (pitch.spd_out + G_out);
 
@@ -324,7 +324,7 @@ void Gimbal::crtl_calc()
                 yaw.yaw_close, yaw.motor_data.actual_data.actual_imu_pos, visual_data->yaw_omg);
             yaw_fd_out = (this->yaw_feedforward * this->chassis_yaw_dot); // 顺从了
             yaw.spd_out = yaw.Visual_speed_pid.Calc((yaw.pos_out + yaw_fd_out),
-                                                    yaw.motor_data.actual_data.actual_gyro,
+                                                    yaw.motor_data.actual_data.actual_spd/9.55f,
                                                     visual_data->yaw_gyro);
             yaw.final_out = yaw.spd_out;
 

@@ -191,10 +191,10 @@ void fire_c::mode_set(Behaviour_e gimbal_mode, bool gimbal_closed)
                           if (fire_mode == STUCK || fire_mode == NO_FIRE)
                               return;
                           else {
-                              if (gimbal_mode == GIMBAL_AUTOATTACK && (visual_data->fire_flag == 0 || gimbal_closed == false))
-                              {
-                                fire_mode = READY;
-                                return;
+                              if (gimbal_mode == GIMBAL_AUTOATTACK &&
+                                  (visual_data->fire_flag == 0 || gimbal_closed == false)) {
+                                  fire_mode = READY;
+                                  return;
                               }
                               fire_mode = AUTO;
                               motor_set_value.pluck_motor_auto_set = fire_rate(25);
@@ -204,7 +204,8 @@ void fire_c::mode_set(Behaviour_e gimbal_mode, bool gimbal_closed)
                           if (fire_mode == STUCK || fire_mode == NO_FIRE)
                               return;
                           else {
-                              if (gimbal_mode == GIMBAL_AUTOATTACK && (visual_data->fire_flag == 0 || gimbal_closed == false))
+                              if (gimbal_mode == GIMBAL_AUTOATTACK &&
+                                  (visual_data->fire_flag == 0 || gimbal_closed == false))
                                   return;
                               fire_mode = SEMI;
                               motor_set_value.pluck_motor_semi_set =
@@ -293,6 +294,11 @@ void fire_c::pluck_ctrl()
         auto_pid.Clear();
         last_mode = fire_mode;
     }
+    // 堵转处理
+    if(fire_mode == STUCK)
+    {
+        
+    }
     // 单发与其他模式下的速度控制
     if (fire_mode == SEMI) {
         pos_out = semi_pos_pid.Calc(motor_set_value.pluck_motor_semi_set,
@@ -365,10 +371,7 @@ void fire_c::check_stuck()
 
     stuck.update((abs(pluck_motor->motor_data_.motor_raw_data.force_feedback) > 8000) &&
                      (abs(pluck_motor->motor_data_.motor_raw_data.feedback_speed) < 500),
-                 nullptr,
-                 [this] {
-                     if (fire_mode == STUCK) pluck_zero_force();
-                 },
+                 nullptr, nullptr,
                  [this] {
                      if (fire_mode != STUCK) {
                          fire_mode = STUCK;
