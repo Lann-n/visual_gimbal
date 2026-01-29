@@ -1,4 +1,5 @@
 #include "fire_ctrl.hpp"
+#include <cstdint>
 namespace MM = Motor_n::MotorBaseDef_n;
 
 void fire_c::Init()
@@ -126,6 +127,26 @@ void fire_c::Loop(Behaviour_e gimbal_mode, bool gimbal_closed)
     Motor_n::DjiMotor_n::set_GiveCurrent(); // 把 PID 输出写进分组缓冲
     Motor_n::DjiMotor_n::MotorTransmit();   // 统一发送
 }
+void fire_c::Loop(Behaviour_e gimbal_mode, float pitch_dif, float yaw_dif,uint8_t vision_mode)
+{
+    bool gimbal_closed = false;
+
+    if (gimbal_mode == GIMBAL_ZERO_FORCE) {
+        fire_zero_force();
+        pluck_zero_force();
+        ctrl_fire_motor();
+    }
+    else
+    {
+        mode_set(gimbal_mode, gimbal_closed);
+        ctrl_fire_motor();
+    }
+
+    pluck_ctrl();
+    Motor_n::DjiMotor_n::DjiMotorControl(); // 逐个算 PID
+    Motor_n::DjiMotor_n::set_GiveCurrent(); // 把 PID 输出写进分组缓冲
+    Motor_n::DjiMotor_n::MotorTransmit();   // 统一发送
+}
 /**
  * @brief 摩擦轮无力
  * @enter 状态位为NO_FIRE，或者主动调用顺带切换为NO_FIRE
@@ -213,6 +234,16 @@ void fire_c::mode_set(Behaviour_e gimbal_mode, bool gimbal_closed)
                           }
                       },
                       80, 350); // 单发阈值与连发阈值
+    if (fire_mode == READY) {
+        fired = 0;
+        motor_set_value.pluck_motor_semi_set = 0.0f;
+        motor_set_value.pluck_motor_auto_set = 0.0f;
+        pluck_motor->motor_data_.motor_processed_data.clear();
+        // pluck_motor->motor_data_.clear();
+        // final_out = auto_pid.Calc(motor_set_value.pluck_motor_auto_set,
+        //                           pluck_motor->motor_data_.motor_raw_data.feedback_speed);
+        // pluck_motor->SetMotorOutputFix(-final_out);
+    }
     /*连发释放*/
     if ((fire_mode == AUTO) &&
         (robo_cmd->dt7_data_->ch[4] > -10 && robo_cmd->dt7_data_->ch[4] < 100)) {
@@ -224,18 +255,11 @@ void fire_c::mode_set(Behaviour_e gimbal_mode, bool gimbal_closed)
         (abs(motor_set_value.pluck_motor_semi_set -
              pluck_motor->motor_data_.motor_processed_data.total_ecd) < 3000) &&
         (abs(pluck_motor->motor_data_.motor_raw_data.feedback_speed) < 1300)) {
+        fired = 1;
         fire_mode = READY;
         pluck_zero_force();
     }
-    if (fire_mode == READY) {
-        motor_set_value.pluck_motor_semi_set = 0.0f;
-        motor_set_value.pluck_motor_auto_set = 0.0f;
-        pluck_motor->motor_data_.motor_processed_data.clear();
-        // pluck_motor->motor_data_.clear();
-        // final_out = auto_pid.Calc(motor_set_value.pluck_motor_auto_set,
-        //                           pluck_motor->motor_data_.motor_raw_data.feedback_speed);
-        // pluck_motor->SetMotorOutputFix(-final_out);
-    }
+
     check_stuck(); // 堵转检测
 }
 
@@ -295,10 +319,15 @@ void fire_c::pluck_ctrl()
         last_mode = fire_mode;
     }
     // 堵转处理
-    if(fire_mode == STUCK)
-    {
-        
+    if (fire_mode == STUCK) {
+        if (pluck_cnt) {
+            pluck_cnt--;
+            pluck_motor->SetMotorOutputFix(1000);
+        } else {
+            fire_mode = READY;
+        }
     }
+
     // 单发与其他模式下的速度控制
     if (fire_mode == SEMI) {
         pos_out = semi_pos_pid.Calc(motor_set_value.pluck_motor_semi_set,
@@ -364,19 +393,28 @@ void fire_c::ready_ctrl()
         pluck_motor->SetMotorOutputFix(-final_out);
     }
 }
-
+/**
+ *卡弹回退： 检测转矩电流与设定速度，当转矩电流>9000且设定速度>0，给个
+ *周期时间 只要设定的周期时间不等于0，就给个反向速度，设定一次减一次，直到为0
+ */
 void fire_c::check_stuck()
 {
     static keyboard_util::KeyCode stuck;
+    bool semi_stuck = (abs(pluck_motor->motor_data_.motor_raw_data.force_feedback) > 8000) &&
+                      (abs(pluck_motor->motor_data_.motor_raw_data.feedback_speed) < 500) &&
+                      fire_mode == SEMI;
+    bool auti_stuck = (abs(pluck_motor->motor_data_.motor_raw_data.force_feedback) > 8000) &&
+                      (abs(pluck_motor->motor_data_.motor_raw_data.feedback_speed) < 500) &&
+                      fire_mode == AUTO;
 
-    stuck.update((abs(pluck_motor->motor_data_.motor_raw_data.force_feedback) > 8000) &&
-                     (abs(pluck_motor->motor_data_.motor_raw_data.feedback_speed) < 500),
-                 nullptr, nullptr,
-                 [this] {
-                     if (fire_mode != STUCK) {
-                         fire_mode = STUCK;
-                         pluck_zero_force();
-                     }
-                 },
-                 nullptr, 0, 2500);
+    stuck.update(
+        semi_stuck, nullptr, nullptr,
+        [this] {
+            if (fire_mode != STUCK) {
+                fire_mode = STUCK;
+                pluck_zero_force();
+                pluck_cnt = 300;
+            }
+        },
+        nullptr, 0, 150);
 }

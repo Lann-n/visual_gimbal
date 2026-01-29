@@ -1,4 +1,5 @@
 #include "gimbal.hpp"
+#include <cstdint>
 
 namespace MM = Motor_n::MotorBaseDef_n;
 
@@ -16,7 +17,7 @@ void Gimbal::Decode_Chassis_Data(BSP_n::Can_c* instance)
 
 void Gimbal::Gimbal2Chassis()
 {
-    CONTROL_SEND_HZ(5); // 200Hz
+    CONTROL_SEND_HZ(4); // 250Hz
 
     static uint8_t gimbal_status = 2;
     if (gimbal_mode == GIMBAL_MANUAL)
@@ -70,19 +71,31 @@ bool Gimbal::Init()
         &yaw.motor_data.actual_data.actual_imu_pos, &yaw.motor_data.actual_data.actual_gyro);
     return 0;
 }
-
+static uint8_t vision_mode = 2; // 视觉模式，暂时这么写
 void Gimbal::Loop()
 {
     Virtual_recive(); // 获取视觉数据
+
     Virtual_send(fire.shoot_msg.aim_color, ins->Pitch, ins->Yaw, ins->Roll,
-                 fire.shoot_msg.shoot_bullet_speed, 0, 0);
+                 fire.shoot_msg.shoot_bullet_speed, 0, vision_mode, fire.fired);
     Gimbal2Chassis();
     update_feedback();
     mode_set();
     last_time = dwt->GetTimeline_ms();
     pitch_dif = abs(visual_data->pitch - pitch.motor_data.actual_data.actual_imu_pos);
     yaw_dif = abs(visual_data->yaw - yaw.motor_data.actual_data.actual_imu_pos);
-    fire.Loop(gimbal_mode, ((pitch_dif < pitch_dif_target) && (yaw_dif < yaw_dif_target)));
+    bool gimbal_is_close = false;
+    // 当视觉识别到目标时才开火
+    if (vision_mode == 1|| vision_mode==0) // 自瞄模式
+    {
+        gimbal_is_close = ((pitch_dif < pitch_dif_target) && (yaw_dif < yaw_dif_target));
+    } else if (vision_mode == 2 || vision_mode == 3) {
+        float range = fabs(atan2(TARGET_RADIUS, visual_data->distance)) * 180.0 / M_PI;
+        float pitch_range = user_maths_c().max_abs(range, 1.5);
+        float yaw_range = user_maths_c().max_abs(range, 1.5);
+        gimbal_is_close = (fabs(pitch_dif) <= pitch_range && fabs(yaw_dif) <= yaw_range);
+    }
+    fire.Loop(gimbal_mode, gimbal_is_close);
     crtl_calc();
     dt = dwt->GetTimeline_ms() - last_time;
     pitch.motor_ptr->Transmit(1);
@@ -96,8 +109,10 @@ void Gimbal::Loop()
  */
 void Gimbal::update_limit()
 {
-    reduce_angle = (PITCH_ANGLE_MIN + 2.0f) - pitch.motor_data.actual_data.actual_ecd_pos;
-    increase_angle = (PITCH_ANGLE_MAX - 2.0f) - pitch.motor_data.actual_data.actual_ecd_pos;
+    reduce_angle = (PITCH_ANGLE_MIN + 2.0f) -
+                   pitch.motor_ptr->motor_data_.motor_processed_data.relative_angle_180;
+    increase_angle = (PITCH_ANGLE_MAX - 2.0f) -
+                     pitch.motor_ptr->motor_data_.motor_processed_data.relative_angle_180;
     user_value_limit(reduce_angle, (PITCH_ANGLE_MIN - PITCH_ANGLE_MAX),
                      (PITCH_ANGLE_MAX - PITCH_ANGLE_MIN));
     user_value_limit(increase_angle, (PITCH_ANGLE_MIN - PITCH_ANGLE_MAX),
@@ -299,8 +314,7 @@ void Gimbal::crtl_calc()
         yaw.final_out = 0.0f;
         pitch.motor_ptr->SetMITData(0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
         yaw.motor_ptr->SetMITData(0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
-    } 
-    else if (gimbal_mode == GIMBAL_AUTOATTACK) {
+    } else if (gimbal_mode == GIMBAL_AUTOATTACK) {
         // 两种控制模式选择
         if (visual_contrl.use_it == true) {
             pitch.final_out = visual_contrl.pitch_calc();
@@ -311,7 +325,8 @@ void Gimbal::crtl_calc()
                                                         pitch.motor_data.actual_data.actual_imu_pos,
                                                         visual_data->pitch_omg);
             pitch.spd_out = pitch.Visual_speed_pid.Calc(
-                pitch.pos_out, pitch.motor_data.actual_data.actual_spd/9.55f, visual_data->pitch_gyro);
+                pitch.pos_out, pitch.motor_data.actual_data.actual_spd / 9.55f,
+                visual_data->pitch_gyro);
             G_out = this->gravity_compensation_f(pitch.motor_data.actual_data.actual_imu_pos);
             pitch.final_out = (pitch.spd_out + G_out);
 
@@ -324,7 +339,7 @@ void Gimbal::crtl_calc()
                 yaw.yaw_close, yaw.motor_data.actual_data.actual_imu_pos, visual_data->yaw_omg);
             yaw_fd_out = (this->yaw_feedforward * this->chassis_yaw_dot); // 顺从了
             yaw.spd_out = yaw.Visual_speed_pid.Calc((yaw.pos_out + yaw_fd_out),
-                                                    yaw.motor_data.actual_data.actual_spd/9.55f,
+                                                    yaw.motor_data.actual_data.actual_spd / 9.55f,
                                                     visual_data->yaw_gyro);
             yaw.final_out = yaw.spd_out;
 
@@ -332,8 +347,7 @@ void Gimbal::crtl_calc()
             yaw.motor_ptr->SetMITData(0.0f, 0.0f, 0.0f, 0.0f, yaw.final_out);
         }
 
-    } 
-    else {
+    } else {
         /*pitch串级pid计算*/
         pitch.pos_out = pitch.Position_pid.Calc(pitch.motor_data.final_set,
                                                 pitch.motor_data.actual_data.actual_imu_pos);

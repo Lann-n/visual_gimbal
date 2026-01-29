@@ -3,9 +3,11 @@
 #include "Algorithm/filter_alg/filter.hpp"
 #include "KeyboardUtil.hpp"
 #include "Module/motor/DJI/dji_driver.hpp"
+#include "Vision.hpp"
 #include "gimbal_config.hpp"
 #include "robo_cmd.hpp"
-#include "Vision.hpp"
+#include <cstdint>
+
 extern "C" {
 // #include "Vision.h"
 }
@@ -28,7 +30,7 @@ extern "C" {
 
 /******************************************射频转换************************************************/
 // 发/s——>rpm
-#define FIRERATE_TO_MOTORRPM 1.f / (float)POKER_GRID * POKER_RATIO * 60
+#define FIRERATE_TO_MOTORRPM 1.f / (float)POKER_GRID* POKER_RATIO * 60
 // rpm——>发/s
 #define MOTORRPM_TO_FIRERATE 1.f / (FIRERATE_TO_MOTORRPM)
 
@@ -108,8 +110,10 @@ public:
     Visual_Rx_t* visual_data;
 
     BSP_n::DWT_c* dwt;
+    uint8_t fired = 0; // 单发到位
     float fire_speed = 23.0f;
     int16_t dead_erro = 3096;
+    uint16_t pluck_cnt = 0;
     // 电机给定值
     struct {
         float left_motor_speed_set;  // 左摩擦轮速度设定值
@@ -150,6 +154,7 @@ public:
     void pluck_zero_force();
 
     void mode_set(Behaviour_e gimbal_mode, bool gimbal_closed);
+    void Loop(Behaviour_e gimbal_mode, float pitch_dif, float yaw_dif, uint8_t vision_mode_);
     bool check_allow_fire();
     void ctrl_fire_motor();
     void all_fire_ctrl();
@@ -160,6 +165,5 @@ public:
 
 private:
     void reset_pluck();
-
     void check_stuck();
 };

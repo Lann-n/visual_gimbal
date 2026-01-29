@@ -50,22 +50,30 @@ void Virtual_recive(void)
 
 uint64_t send_time = 0;
 
-void Virtual_send(uint8_t aim_color, float Pitch, float Yaw, float Roll, float _bullet_speed, uint8_t _reset_tracker, uint8_t _now_mode)
+void Virtual_send(uint8_t aim_color,
+                  float Pitch,
+                  float Yaw,
+                  float Roll,
+                  float _bullet_speed,
+                  uint8_t _reset_tracker,
+                  uint8_t _now_mode,
+                  uint8_t fired)
 {
     send_time++;
 
-    static uint8_t send_buff[33];
+    static uint8_t send_buff[34];
     Visual_Tx.header = 0xFF;
     Visual_Tx.trailer = 0xFE;
     memcpy(&Visual_Tx.aim_x, 0, 12);
     Visual_Tx.Roll = Pitch;
     Visual_Tx.Pitch = Roll; // Pitch + Send_Pitch_Compeny;
     Visual_Tx.Yaw = Yaw;
+    Visual_Tx.fired = fired;
     Visual_Tx.detect_color = aim_color;
     Visual_Tx.reset_tracker = _reset_tracker;
     Visual_Tx.now_mode = _now_mode;
     Visual_Tx.bullet_speed = _bullet_speed;
-    memcpy(&send_buff, &Visual_Tx.header, 33);
+    memcpy(&send_buff, &Visual_Tx.header, 34);
     CDC_Transmit_FS(send_buff, sizeof(send_buff));
 }
 

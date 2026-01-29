@@ -136,3 +136,6 @@ private:
     // Gimbal(const Gimbal&) = delete;
     // Gimbal& operator=(const Gimbal&) = delete;
 };
+/**************************************************************************************************/
+
+#define TARGET_RADIUS 0.154f // 能量机关半径

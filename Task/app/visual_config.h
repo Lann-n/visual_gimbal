@@ -11,13 +11,14 @@ typedef struct
     uint8_t robot_level;                // 机器人等级
     uint8_t aim_color;
 } shoot_msg_t;
-
-typedef __attribute__((packed)) struct
+#pragma pack(push, 1)
+typedef  struct
 {
     uint8_t header;
     uint8_t detect_color;
     uint8_t reset_tracker; // 打符正反转,自瞄刷新收敛
     uint8_t now_mode;      // 当前自瞄模式  1：自瞄  2：小幅 3：大幅
+    uint8_t fired;         // 0-未开火 1-已开火
     float bullet_speed;    // 子弹速度
     float Roll;
     float Pitch;
@@ -28,7 +29,7 @@ typedef __attribute__((packed)) struct
     uint8_t trailer;
 } Visual_Tx_t;
 
-typedef __attribute__((packed)) struct
+typedef struct
 {
     uint8_t header;
     uint8_t fire_flag;      //视觉允许发射标志位
@@ -44,7 +45,7 @@ typedef __attribute__((packed)) struct
     uint8_t armor_nums;     //装甲板数字
     uint8_t trailer;
 } Visual_Rx_t;
-
+#pragma pack(pop)
 typedef struct
 {
     uint8_t send_buff[33];

@@ -19,7 +19,8 @@ void Virtual_send(uint8_t aim_color,
                   float Roll,
                   float _bullet_speed,
                   uint8_t _reset_tracker,
-                  uint8_t _now_mode);
+                  uint8_t _now_mode,
+                  uint8_t fired);
 void Virtual_Clear();
 Visual_Rx_t* Get_virtual_recive_ptr();
 
