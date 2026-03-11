@@ -37,6 +37,18 @@ include("cmake/gcc-arm-none-eabi.cmake") # toolchain
 project(${CMAKE_PROJECT_NAME})
 message("Build type: " ${CMAKE_BUILD_TYPE})
 
+if(CMAKE_EXPORT_COMPILE_COMMANDS)
+    set(USER_PROJECT_COMPILE_COMMANDS "${CMAKE_SOURCE_DIR}/compile_commands.json")
+    if(EXISTS "${USER_PROJECT_COMPILE_COMMANDS}" OR IS_SYMLINK "${USER_PROJECT_COMPILE_COMMANDS}")
+        file(REMOVE "${USER_PROJECT_COMPILE_COMMANDS}")
+    endif()
+    execute_process(
+            COMMAND ${CMAKE_COMMAND} -E create_symlink
+            "${CMAKE_BINARY_DIR}/compile_commands.json"
+            "${USER_PROJECT_COMPILE_COMMANDS}"
+    )
+endif()
+
 # Enable CMake support for ASM and C languages
 enable_language(C CXX ASM)
 
@@ -45,6 +57,57 @@ add_compile_options(-w)
 
 # Create an executable object type
 add_executable(${CMAKE_PROJECT_NAME})
+
+function(TARGET_ADD_GCC_CXX_SYSTEM_INCLUDES target_name)
+    if(NOT CMAKE_CXX_COMPILER)
+        return()
+    endif()
+
+    separate_arguments(USER_ARM_CXX_TARGET_FLAGS NATIVE_COMMAND "${TARGET_FLAGS}")
+    execute_process(
+            COMMAND ${CMAKE_CXX_COMPILER} ${USER_ARM_CXX_TARGET_FLAGS} -v -x c++ -E /dev/null
+            OUTPUT_QUIET
+            ERROR_VARIABLE USER_ARM_GXX_VERBOSE
+            RESULT_VARIABLE USER_ARM_GXX_RESULT
+    )
+
+    if(NOT USER_ARM_GXX_RESULT EQUAL 0)
+        message(WARNING "Failed to query C++ system include directories from ${CMAKE_CXX_COMPILER}")
+        return()
+    endif()
+
+    string(REPLACE "\r" "" USER_ARM_GXX_VERBOSE "${USER_ARM_GXX_VERBOSE}")
+    string(REGEX MATCH "#include <\\.\\.\\.> search starts here:\n([^\n]*\n)+End of search list\\." USER_ARM_GXX_INCLUDE_BLOCK "${USER_ARM_GXX_VERBOSE}")
+    if(NOT USER_ARM_GXX_INCLUDE_BLOCK)
+        message(WARNING "Failed to parse C++ system include directories from ${CMAKE_CXX_COMPILER}")
+        return()
+    endif()
+
+    string(REGEX REPLACE "^.*#include <\\.\\.\\.> search starts here:\n" "" USER_ARM_GXX_INCLUDE_BLOCK "${USER_ARM_GXX_INCLUDE_BLOCK}")
+    string(REGEX REPLACE "\nEnd of search list\\.$" "" USER_ARM_GXX_INCLUDE_BLOCK "${USER_ARM_GXX_INCLUDE_BLOCK}")
+    string(REPLACE "\n" ";" USER_ARM_GXX_INCLUDE_LIST "${USER_ARM_GXX_INCLUDE_BLOCK}")
+
+    set(USER_ARM_GXX_SYSTEM_INCLUDES "")
+    foreach(include_dir IN LISTS USER_ARM_GXX_INCLUDE_LIST)
+        string(STRIP "${include_dir}" include_dir)
+        if(IS_DIRECTORY "${include_dir}")
+            list(APPEND USER_ARM_GXX_SYSTEM_INCLUDES "${include_dir}")
+        endif()
+    endforeach()
+
+    list(REMOVE_DUPLICATES USER_ARM_GXX_SYSTEM_INCLUDES)
+    if(USER_ARM_GXX_SYSTEM_INCLUDES)
+        set(USER_ARM_GXX_SYSTEM_INCLUDE_FLAGS "")
+        foreach(include_dir IN LISTS USER_ARM_GXX_SYSTEM_INCLUDES)
+            list(APPEND USER_ARM_GXX_SYSTEM_INCLUDE_FLAGS "-isystem${include_dir}")
+        endforeach()
+        target_compile_options(${target_name} PRIVATE
+                $<$<COMPILE_LANGUAGE:CXX>:${USER_ARM_GXX_SYSTEM_INCLUDE_FLAGS}>
+        )
+    endif()
+endfunction()
+
+TARGET_ADD_GCC_CXX_SYSTEM_INCLUDES(${CMAKE_PROJECT_NAME})
 
 # Generate .map file automatically
 target_link_options(${CMAKE_PROJECT_NAME} PRIVATE
@@ -123,8 +186,8 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal.c"
             ${CMAKE_SOURCE_DIR}/ACE_ECF_26/App/safe_task
             ${CMAKE_SOURCE_DIR}/ACE_ECF_26/Bsp/CAN
             ${CMAKE_SOURCE_DIR}/ACE_ECF_26/Bsp/CAN/fdcan
-            ${CMAKE_SOURCE_DIR}/ACE_ECF_26/module/motor
-            ${CMAKE_SOURCE_DIR}/ACE_ECF_26/module/motor/DM
+            ${CMAKE_SOURCE_DIR}/ACE_ECF_26/Module/motor
+            ${CMAKE_SOURCE_DIR}/ACE_ECF_26/Module/motor/DM
     )
 else()
     ADD_MODULE(DM_MOTOR ON
@@ -132,8 +195,8 @@ else()
             ${CMAKE_SOURCE_DIR}/ACE_ECF_26/App/safe_task
             ${CMAKE_SOURCE_DIR}/ACE_ECF_26/Bsp/CAN
             ${CMAKE_SOURCE_DIR}/ACE_ECF_26/Bsp/CAN/can
-            ${CMAKE_SOURCE_DIR}/ACE_ECF_26/module/motor
-            ${CMAKE_SOURCE_DIR}/ACE_ECF_26/module/motor/DM
+            ${CMAKE_SOURCE_DIR}/ACE_ECF_26/Module/motor
+            ${CMAKE_SOURCE_DIR}/ACE_ECF_26/Module/motor/DM
     )
 endif()
 if(EXISTS "${CMAKE_SOURCE_DIR}/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal.c")
@@ -142,8 +205,8 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal.c"
             ${CMAKE_SOURCE_DIR}/ACE_ECF_26/App/safe_task
             ${CMAKE_SOURCE_DIR}/ACE_ECF_26/Bsp/CAN
             ${CMAKE_SOURCE_DIR}/ACE_ECF_26/Bsp/CAN/fdcan
-            ${CMAKE_SOURCE_DIR}/ACE_ECF_26/module/motor
-            ${CMAKE_SOURCE_DIR}/ACE_ECF_26/module/motor/DJI
+            ${CMAKE_SOURCE_DIR}/ACE_ECF_26/Module/motor
+            ${CMAKE_SOURCE_DIR}/ACE_ECF_26/Module/motor/DJI
     )
 else()
     ADD_MODULE(DJI_MOTOR ON
@@ -151,31 +214,31 @@ else()
             ${CMAKE_SOURCE_DIR}/ACE_ECF_26/App/safe_task
             ${CMAKE_SOURCE_DIR}/ACE_ECF_26/Bsp/CAN
             ${CMAKE_SOURCE_DIR}/ACE_ECF_26/Bsp/CAN/can
-            ${CMAKE_SOURCE_DIR}/ACE_ECF_26/module/motor
-            ${CMAKE_SOURCE_DIR}/ACE_ECF_26/module/motor/DJI
+            ${CMAKE_SOURCE_DIR}/ACE_ECF_26/Module/motor
+            ${CMAKE_SOURCE_DIR}/ACE_ECF_26/Module/motor/DJI
     )
 endif()
 ADD_MODULE(DR16 ON
         ${CMAKE_SOURCE_DIR}/ACE_ECF_26/Bsp/DWT
         ${CMAKE_SOURCE_DIR}/ACE_ECF_26/App/safe_task
         ${CMAKE_SOURCE_DIR}/ACE_ECF_26/Bsp/USART
-        ${CMAKE_SOURCE_DIR}/ACE_ECF_26/module/dr16
+        ${CMAKE_SOURCE_DIR}/ACE_ECF_26/Module/dr16
 )
 ADD_MODULE(REFEREE OFF
         ${CMAKE_SOURCE_DIR}/ACE_ECF_26/Bsp/DWT
         ${CMAKE_SOURCE_DIR}/ACE_ECF_26/App/safe_task
         ${CMAKE_SOURCE_DIR}/ACE_ECF_26/Bsp/USART
-        ${CMAKE_SOURCE_DIR}/ACE_ECF_26/module/referee
+        ${CMAKE_SOURCE_DIR}/ACE_ECF_26/Module/referee
 )
 ADD_MODULE(VT13 OFF
         ${CMAKE_SOURCE_DIR}/ACE_ECF_26/Bsp/DWT
         ${CMAKE_SOURCE_DIR}/ACE_ECF_26/App/safe_task
         ${CMAKE_SOURCE_DIR}/ACE_ECF_26/Bsp/USART
-        ${CMAKE_SOURCE_DIR}/ACE_ECF_26/module/referee
+        ${CMAKE_SOURCE_DIR}/ACE_ECF_26/Module/referee
 )
 ADD_MODULE(SERVO OFF
         ${CMAKE_SOURCE_DIR}/ACE_ECF_26/Bsp/PWM
-        ${CMAKE_SOURCE_DIR}/ACE_ECF_26/module/servo
+        ${CMAKE_SOURCE_DIR}/ACE_ECF_26/Module/servo
 )
 ADD_MODULE(MUSIC OFF
         ${CMAKE_SOURCE_DIR}/ACE_ECF_26/Bsp/PWM
@@ -203,7 +266,7 @@ ADD_MODULE(POWER_CTRL OFF
         ${CMAKE_SOURCE_DIR}/ACE_ECF_26/Bsp/DWT
         ${CMAKE_SOURCE_DIR}/ACE_ECF_26/App/safe_task
         ${CMAKE_SOURCE_DIR}/ACE_ECF_26/Bsp/USART
-        ${CMAKE_SOURCE_DIR}/ACE_ECF_26/module/referee
+        ${CMAKE_SOURCE_DIR}/ACE_ECF_26/Module/referee
         ${CMAKE_SOURCE_DIR}/ACE_ECF_26/App/power_ctrl
 )
 
